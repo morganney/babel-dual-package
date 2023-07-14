@@ -1,0 +1,48 @@
+{
+  "name": "babel-dual-package",
+  "version": "1.0.0-alpha.0",
+  "description": "CLI for building a dual ESM and CJS package with babel.",
+  "type": "module",
+  "main": "index.js",
+  "engines": {
+    "node": ">=20.1.0"
+  },
+  "bin": "index.js",
+  "scripts": {
+    "prettier": "prettier -w *.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Morgan Ney <morganney@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "@babel/core": "^7.22.8",
+    "@babel/parser": "^7.22.7",
+    "@babel/preset-env": "^7.22.7",
+    "@babel/preset-react": "^7.22.5",
+    "@babel/preset-typescript": "^7.22.5",
+    "@babel/traverse": "^7.22.8",
+    "magic-string": "^0.30.1",
+    "read-pkg-up": "^10.0.0"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.22.6",
+    "prettier": "^3.0.0"
+  },
+  "files": [
+    "*.js"
+  ],
+  "keywords": [
+    "babel",
+    "dual-package",
+    "esm",
+    "cjs",
+    ".d.ts"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/morganney/babel-dual-package.git"
+  },
+  "bugs": {
+    "url": "https://github.com/morganney/babel-dual-package/issues"
+  }
+}
