@@ -36,8 +36,9 @@ Run `babel-dual-package --help` to see a list of more [options](#options).
 
 ## Example
 
-If your project is using typescript then add `@babel/preset-typescript` to your `babel.config.json`.
+If your project is using typescript then add `@babel/preset-typescript`. If it is also using JSX, then add `@babel/preset-react`.
 
+**babel.config.json**
 ```json
 {
   "presets": [
@@ -45,21 +46,22 @@ If your project is using typescript then add `@babel/preset-typescript` to your 
       "modules": false
     }],
     "@babel/preset-typescript"
+    ["@babel/preset-react", {
+      "runtime": "automatic"
+    }]
   ]
 }
 ```
 
-You can use two separate tsconfig.json files to build types in a `dist` and `dist/cjs` output directory. 
-
-This is used to generate types for the ESM build.
+Set the `declarationDir` for your types to the same value used for `--out-dir`, or `dist` (the default) if not using `--out-dir`.
 
 **tsconfig.json**
 ```json
 {
   "compilerOptions": {
-    "moduleResolution": "nodenext",
     "declaration": true,
     "declarationDir": "dist",
+    "emitDeclarationOnly": true,
     "isolatedModules": true,
     "strict": true
   },
@@ -67,29 +69,13 @@ This is used to generate types for the ESM build.
 }
 ```
 
-The other is used to build types for the CJS build.
-
-**tsconfig.cjs.json**
-```json
-{
-  "extends": "./tsconfig.json",
-  "compilerOptions": {
-    "emitDeclarationOnly": true,
-    "declarationDir": "dist/cjs"
-  },
-  "include": ["src"]
-}
-```
-
-Technically, the declaration files are identical, as `.d.ts` files have always used ES module syntax, so the only thing `babel-dual-package` does is update the extensions appropriately. Future versions of `babel-dual-package` will simply copy the `.d.ts` files from the ESM build over to the CJS build making two tsconfig.json files unnecessary.
-
 In order to support typescript, you must pass the `--extensions` used:
 
 ```
-babel-dual-package --out-dir dist --extensions .ts src
+babel-dual-package --out-dir dist --extensions .ts,.tsx src
 ```
 
-If everything worked you should get an ESM build in `dist` and a CJS build in `dist/cjs` with all extensions in filenames and import/export sources updated correctly.
+If everything worked you should get an ESM build in `dist` and a CJS build in `dist/cjs` with all extensions in the filenames, and `import`/`export` sources updated correctly.
 
 Now you can add some scripts to your package.json file to help automate the build during CI/CD.
 
@@ -97,8 +83,8 @@ Now you can add some scripts to your package.json file to help automate the buil
 ```json
   "type": "module",
   "scripts": {
-    "build:types": "tsc && tsc -p ./tsconfig.cjs.json",
-    "build:dual": "babel-dual-package --out-dir dist --extensions .ts src",
+    "build:types": "tsc --emitDeclarationOnly",
+    "build:dual": "babel-dual-package --out-dir dist --extensions .ts,.tsx src",
     "build": "npm run build:types && npm run build:dual"
   }
 ```
@@ -114,6 +100,7 @@ Usage: babel-dual-package [options] <files ...>
 
 Options:
 --out-dir [out] 		 Compile the modules in <files ...> into an output directory.
+--root-mode [mode] 		 The project-root resolution mode. One of 'root' (the default), 'upward', or 'upward-optional'.
 --cjs-dir-name [string] 	 The name of the --out-dir subdirectory to output the CJS build. [cjs]
 --extensions [extensions] 	 List of extensions to compile when a directory is part of the <files ...> input. [.js,.jsx,.mjs,.cjs]
 --out-file-extension [string] 	 Use a specific extension for the output files.

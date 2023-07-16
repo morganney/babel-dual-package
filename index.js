@@ -3,7 +3,7 @@
 import { cwd } from 'node:process'
 import { performance } from 'node:perf_hooks'
 import { resolve, dirname, relative, join, extname, basename } from 'node:path'
-import { lstat, writeFile, mkdir, rm } from 'node:fs/promises'
+import { lstat, writeFile, mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 
 import { version } from '@babel/core'
@@ -113,14 +113,24 @@ if (ctx) {
     }
   }
 
-  if (!noCjsDir && !keepFileExtension && !outFileExtension && existsSync(cjsOutDir)) {
-    const files = (await getFiles(cjsOutDir)).filter((file) => file.endsWith('.d.ts'))
+  if (
+    !noCjsDir &&
+    !keepFileExtension &&
+    !outFileExtension &&
+    existsSync(outDir) &&
+    existsSync(cjsOutDir)
+  ) {
+    /**
+     * Copies any .d.ts files from --out-dir to --cjs-dir-name
+     * while updating extensions in filenames and import/exports.
+     */
+    const files = (await getFiles(outDir)).filter((file) => file.endsWith('.d.ts'))
 
     for (const filename of files) {
       const fileCjs = await transformDtsExtensions(filename)
+      const filenameCjs = join(cjsOutDir, basename(filename))
 
-      await rm(filename, { force: true })
-      await writeFile(filename.replace(/(\.d\.ts)$/, '.d.cts'), fileCjs)
+      await writeFile(filenameCjs.replace(/(\.d\.ts)$/, '.d.cts'), fileCjs)
       numFilesCompiled++
     }
   }

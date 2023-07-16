@@ -1,6 +1,6 @@
 {
   "name": "babel-dual-package",
-  "version": "1.0.0-alpha.1",
+  "version": "1.0.0-alpha.2",
   "description": "CLI for building a dual ESM and CJS package with Babel.",
   "type": "module",
   "main": "index.js",
