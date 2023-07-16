@@ -7,6 +7,7 @@ import { loadPartialConfigAsync } from '@babel/core'
 import { logHelp } from './util.js'
 
 const init = async (onError = () => {}) => {
+  const rootModes = ['root', 'upward', 'upward-optional']
   let pkgJson = null
   let args = null
   let babelConfig = null
@@ -27,6 +28,10 @@ const init = async (onError = () => {}) => {
         'out-dir': {
           type: 'string',
           default: 'dist'
+        },
+        'root-mode': {
+          type: 'string',
+          default: 'root'
         },
         extensions: {
           type: 'string',
@@ -64,6 +69,12 @@ const init = async (onError = () => {}) => {
         throw new Error('No filenames found. Did you forget to pass <files ...>?')
       }
 
+      if (!rootModes.includes(values['root-mode'])) {
+        throw new Error(
+          `Invalid option for --root-mode. Can be one of ${rootModes.toString()}.`
+        )
+      }
+
       pkgJson = await readPackageUp()
 
       if (!pkgJson) {
@@ -77,7 +88,7 @@ const init = async (onError = () => {}) => {
       }
 
       pkgJson = pkgJson.packageJson
-      babelConfig = await loadPartialConfigAsync()
+      babelConfig = await loadPartialConfigAsync({ rootMode: values['root-mode'] })
     }
   } catch (err) {
     onError(err.message)
@@ -88,6 +99,9 @@ const init = async (onError = () => {}) => {
     logHelp('Options:')
     logHelp(
       '--out-dir [out] \t\t Compile the modules in <files ...> into an output directory.'
+    )
+    logHelp(
+      "--root-mode [mode] \t\t The project-root resolution mode. One of 'root' (the default), 'upward', or 'upward-optional'."
     )
     logHelp(
       '--cjs-dir-name [string] \t The name of the --out-dir subdirectory to output the CJS build. [cjs]'

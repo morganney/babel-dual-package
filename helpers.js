@@ -1,7 +1,9 @@
 import { isRelative, hasJsExt, replaceJsExtWithCjs } from './util.js'
 
 const resolveStringLiteral = (path) => {
-  return path.node.extra.raw
+  const { node } = path
+
+  return node.extra?.raw ?? `"${node.value}"`
 }
 const resolveTemplateLiteral = (path) => {
   const { code } = path.hub.file
