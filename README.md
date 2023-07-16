@@ -7,7 +7,7 @@ CLI for building a [dual ESM and CJS package](https://nodejs.org/api/packages.ht
 
 ## Requirements
 
-* Node >= 14.14.0.
+* Node >= 16.19.0.
 * Your package uses `"type": "module"` in package.json.
 
 ## Getting Started
