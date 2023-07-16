@@ -13,14 +13,7 @@ const transform = async (filename, opts) => {
   const source = await readFile(filename)
   const esmSource = source.toString()
   const cjsSource = new MagicString(esmSource)
-  const {
-    esmPresets,
-    esmPlugins,
-    cjsPresets,
-    keepFileExtension,
-    outFileExtension,
-    ...rest
-  } = opts
+  const { esmPresets, esmPlugins, cjsPresets, ...rest } = opts
   const baseOpts = {
     ...rest,
     babelrc: false,

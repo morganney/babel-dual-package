@@ -12,8 +12,8 @@ const init = async (onError = () => {}) => {
   let babelConfig = null
 
   try {
-    if (parseFloat(versions.node) < 20.1) {
-      throw new Error('This script requires a Node version >= 20.1.0')
+    if (parseFloat(versions.node) < 16.19) {
+      throw new Error('This script requires a Node version >= 16.19.0')
     }
 
     const { values, positionals } = parseArgs({

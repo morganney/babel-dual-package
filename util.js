@@ -1,6 +1,7 @@
 import { inspect } from 'node:util'
 import { fileURLToPath } from 'node:url'
-import { dirname } from 'node:path'
+import { dirname, resolve } from 'node:path'
+import { readdir } from 'node:fs/promises'
 
 import { createConfigItem } from '@babel/core'
 
@@ -12,9 +13,11 @@ const black = '\x1b[30m'
 const jsExtRegex = /\.(js['"`\s]*?)$/i
 const relativeSpecifierRegex = /^['"`\s]*?(?:\.|\.\.)\//i
 const dump = (obj = {}, prefix = '') => {
+  // eslint-disable-next-line no-console
   console.log(prefix, inspect(obj, false, null, true))
 }
 const log = (color = cyan, msg = '', prefix = '') => {
+  // eslint-disable-next-line no-console
   console.log(`${color}%s\x1b[0m`, `${prefix}${msg}`)
 }
 const logError = log.bind(null, red)
@@ -22,6 +25,18 @@ const logNotice = log.bind(null, cyan)
 const logResult = log.bind(null, black)
 const logHelp = (msg) => {
   logResult(msg, '')
+}
+const getFiles = async (dir) => {
+  const dirents = await readdir(dir, { withFileTypes: true })
+  const files = await Promise.all(
+    dirents.map((dirent) => {
+      const path = resolve(dir, dirent.name)
+
+      return dirent.isFile() ? path : getFiles(path)
+    })
+  )
+
+  return files.flat()
 }
 const getConfigItem = (value, type = 'preset') => {
   return createConfigItem(value, { type, dirname: __dirname })
@@ -162,6 +177,7 @@ export {
   isEsModuleFile,
   isRelative,
   replaceJsExtWithCjs,
+  getFiles,
   getEsmPlugins,
   getPresetIdx,
   getPluginIdx,
