@@ -1,15 +1,17 @@
 {
   "name": "babel-dual-package",
-  "version": "1.0.0-alpha.0",
-  "description": "CLI for building a dual ESM and CJS package with babel.",
+  "version": "1.0.0-alpha.1",
+  "description": "CLI for building a dual ESM and CJS package with Babel.",
   "type": "module",
   "main": "index.js",
   "engines": {
-    "node": ">=20.1.0"
+    "node": ">=14.14.0"
   },
+  "engineStrict": true,
   "bin": "index.js",
   "scripts": {
     "prettier": "prettier -w *.js",
+    "lint": "eslint .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Morgan Ney <morganney@gmail.com>",
@@ -26,10 +28,14 @@
   },
   "devDependencies": {
     "@babel/cli": "^7.22.6",
+    "@eslint/js": "^8.45.0",
+    "eslint": "^8.45.0",
+    "globals": "^13.20.0",
     "prettier": "^3.0.0"
   },
   "files": [
-    "*.js"
+    "*.js",
+    "!*.config.js"
   ],
   "keywords": [
     "babel",

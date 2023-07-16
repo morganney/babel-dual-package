@@ -3,7 +3,7 @@
 import { cwd } from 'node:process'
 import { performance } from 'node:perf_hooks'
 import { resolve, dirname, relative, join, extname, basename } from 'node:path'
-import { lstat, readdir, writeFile, mkdir, rm } from 'node:fs/promises'
+import { lstat, writeFile, mkdir, rm } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 
 import { version } from '@babel/core'
@@ -13,6 +13,7 @@ import { transform, transformDtsExtensions } from './transform.js'
 import {
   logError,
   logResult,
+  getFiles,
   getEsmPlugins,
   getModulePresets,
   getOutFileExt,
@@ -38,13 +39,12 @@ if (ctx) {
     addDefaultPresets(presets, extensions)
   }
 
+  let numFilesCompiled = 0
   const esmPresets = getModulePresets(presets, 'esm')
   const cjsPresets = getModulePresets(presets, 'cjs')
   const esmPlugins = getEsmPlugins(plugins)
   const startTime = performance.now()
-  let numFilesCompiled = 0
-
-  async function build(filename, positional) {
+  const build = async (filename, positional) => {
     const { code } = await transform(filename, {
       targets,
       presets,
@@ -55,9 +55,7 @@ if (ctx) {
       // Custom options
       esmPresets,
       esmPlugins,
-      cjsPresets,
-      outFileExtension,
-      keepFileExtension
+      cjsPresets
     })
 
     if (code) {
@@ -105,29 +103,24 @@ if (ctx) {
         numFilesCompiled++
       }
     } else {
-      const dirents = await readdir(posPath, { recursive: true, withFileTypes: true })
-      const files = dirents.filter(
-        (dirent) => dirent.isFile() && extensions.includes(extname(dirent.name))
+      const files = (await getFiles(posPath)).filter((file) =>
+        extensions.includes(extname(file))
       )
 
-      for (const { path, name } of files) {
-        await build(join(path, name), posPath)
+      for (const filename of files) {
+        await build(filename, posPath)
       }
     }
   }
 
   if (!noCjsDir && !keepFileExtension && !outFileExtension && existsSync(cjsOutDir)) {
-    const dtsDirents = await readdir(cjsOutDir, { recursive: true, withFileTypes: true })
-    const dtsFiles = dtsDirents.filter(
-      (dirent) => dirent.isFile() && dirent.name.endsWith('.d.ts')
-    )
+    const files = (await getFiles(cjsOutDir)).filter((file) => file.endsWith('.d.ts'))
 
-    for (const dtsFile of dtsFiles) {
-      const dtsFilename = join(dtsFile.path, dtsFile.name)
-      const dtsFileCjsExtensions = await transformDtsExtensions(dtsFilename)
+    for (const filename of files) {
+      const fileCjs = await transformDtsExtensions(filename)
 
-      await rm(dtsFilename, { force: true })
-      await writeFile(dtsFilename.replace(/(\.d\.ts)$/, '.d.cts'), dtsFileCjsExtensions)
+      await rm(filename, { force: true })
+      await writeFile(filename.replace(/(\.d\.ts)$/, '.d.cts'), fileCjs)
       numFilesCompiled++
     }
   }
