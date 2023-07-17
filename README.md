@@ -91,7 +91,7 @@ Now you can add some scripts to your package.json file to help automate the buil
   }
 ```
 
-### Flat build with `.js` extension
+### Flat build
 
 Given a directory structure like the following,
 
@@ -147,3 +147,9 @@ Options:
 --minified  			 Save as many bytes when printing (false by default).
 --help 				 Output usage information (this information).
 ```
+
+## Questions
+
+**Q** Can I use `"type": "commonjs"` in my package.json file, or just not include the field?
+
+**A** No. Converting from CJS to ESM is a codemod, not transpiling via Babel.
