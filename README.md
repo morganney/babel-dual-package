@@ -8,7 +8,7 @@ CLI for building a [dual ESM and CJS package](https://nodejs.org/api/packages.ht
 ## Requirements
 
 * Node >= 16.19.0.
-* Your package uses `"type": "module"` in package.json (converting from CJS to ESM is a codemod, not transpiling via Babel).
+* Your package uses `"type": "module"` in package.json.
 
 ## Getting Started
 
