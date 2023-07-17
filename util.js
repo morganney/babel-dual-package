@@ -147,12 +147,12 @@ const isRelative = (str) => {
 }
 const isEsModuleFile = (str) => /\.m[jt]s?/.test(str)
 const getOutFileExt = (ext, outFileExtension, keepFileExtension, type = 'esm') => {
-  if (outFileExtension) {
-    return outFileExtension
-  }
-
   if (keepFileExtension) {
     return ext
+  }
+
+  if (outFileExtension) {
+    return outFileExtension[type]
   }
 
   if (/\.m[jt]s/.test(ext)) {

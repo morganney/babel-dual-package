@@ -30,6 +30,8 @@ if (ctx) {
   const keepFileExtension = args.values['keep-file-extension']
   const outFileExtension = args.values['out-file-extension']
   const noCjsDir = args.values['no-cjs-dir']
+  const sourceMaps = args.values['source-maps']
+  const minified = args.values.minified
   const extensions = args.values.extensions
     .split(',', 8)
     .map((ext) => ext.trim())
@@ -45,11 +47,13 @@ if (ctx) {
   const esmPlugins = getEsmPlugins(plugins)
   const startTime = performance.now()
   const build = async (filename, positional) => {
-    const { code } = await transform(filename, {
+    const { code, map } = await transform(filename, {
       targets,
       presets,
       plugins,
       filename,
+      minified,
+      sourceMaps,
       ast: true,
       sourceType: 'module',
       // Custom options
@@ -82,7 +86,22 @@ if (ctx) {
         code.cjs
       )
 
-      numFilesCompiled++
+      if (sourceMaps && map) {
+        await writeFile(
+          outFile.replace(
+            extRegex,
+            `${getOutFileExt(ext, outFileExtension, keepFileExtension)}.map`
+          ),
+          JSON.stringify(map.esm, null, 2)
+        )
+        await writeFile(
+          outFileCjs.replace(
+            extRegex,
+            `${getOutFileExt(ext, outFileExtension, keepFileExtension, 'cjs')}.map`
+          ),
+          JSON.stringify(map.cjs, null, 2)
+        )
+      }
     }
   }
 
@@ -109,6 +128,7 @@ if (ctx) {
 
       for (const filename of files) {
         await build(filename, posPath)
+        numFilesCompiled++
       }
     }
   }

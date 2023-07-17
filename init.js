@@ -39,7 +39,7 @@ const init = async (onError = () => {}) => {
         },
         'out-file-extension': {
           type: 'string',
-          default: ''
+          default: 'esm:.js,cjs:.cjs'
         },
         'cjs-dir-name': {
           type: 'string',
@@ -52,6 +52,14 @@ const init = async (onError = () => {}) => {
         'keep-file-extension': {
           type: 'boolean',
           default: false
+        },
+        'source-maps': {
+          type: 'boolean',
+          default: false
+        },
+        minified: {
+          type: 'boolean',
+          default: false
         }
       }
     })
@@ -59,20 +67,32 @@ const init = async (onError = () => {}) => {
     args = { values, positionals }
 
     if (!values.help) {
-      if (values['keep-file-extension'] && values['out-file-extension']) {
-        throw new Error(
-          '--keep-file-extension and --out-file-extension are mutually exclusive.'
-        )
-      }
-
       if (!positionals.length) {
         throw new Error('No filenames found. Did you forget to pass <files ...>?')
       }
 
       if (!rootModes.includes(values['root-mode'])) {
         throw new Error(
-          `Invalid option for --root-mode. Can be one of ${rootModes.toString()}.`
+          `Invalid argument for --root-mode. Can be one of ${rootModes.toString()}.`
         )
+      }
+
+      if (values['keep-file-extension'] && values['out-file-extension']) {
+        throw new Error(
+          '--keep-file-extension and --out-file-extension are mutually exclusive.'
+        )
+      }
+
+      if (values['out-file-extension']) {
+        const outExt = values['out-file-extension']
+        // On the cli the argument passed is something like esm:.esm.ext,cjs:.cjs.ext
+        const matches = outExt.match(/^esm:(((\.\w+)?\.\w+)+),cjs:(((\.\w+)?\.\w+)+)$/)
+
+        if (!matches) {
+          throw new Error(`Invalid argument '${outExt}' for --out-file-extension.`)
+        }
+
+        args.values['out-file-extension'] = { esm: matches[1], cjs: matches[4] }
       }
 
       pkgJson = await readPackageUp()
@@ -110,12 +130,14 @@ const init = async (onError = () => {}) => {
       '--extensions [extensions] \t List of extensions to compile when a directory is part of the <files ...> input. [.js,.jsx,.mjs,.cjs]'
     )
     logHelp(
-      '--out-file-extension [string] \t Use a specific extension for the output files.'
+      '--out-file-extension [extmap] \t Use a specific extension for esm/cjs files. [esm:.js,cjs:.cjs]'
     )
     logHelp('--keep-file-extension \t\t Preserve the file extensions of the input files.')
     logHelp(
       '--no-cjs-dir \t\t\t Do not create a subdirectory for the CJS build in --out-dir.'
     )
+    logHelp('--source-maps \t\t\t Generate an external source map.')
+    logHelp('--minified  \t\t\t Save as many bytes when printing (false by default).')
     logHelp(`--help \t\t\t\t Output usage information (this information).`)
   }
 

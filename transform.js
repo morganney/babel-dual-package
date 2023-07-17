@@ -19,7 +19,11 @@ const transform = async (filename, opts) => {
     babelrc: false,
     configFile: false
   }
-  const { code: esm, ast } = await transformAsync(esmSource, {
+  const {
+    ast,
+    code: esm,
+    map: esmMap
+  } = await transformAsync(esmSource, {
     ...baseOpts,
     plugins: esmPlugins,
     presets: esmPresets
@@ -39,14 +43,15 @@ const transform = async (filename, opts) => {
     }
   })
 
-  const { code: cjs } = await transformAsync(cjsSource.toString(), {
+  const { code: cjs, map: cjsMap } = await transformAsync(cjsSource.toString(), {
     ...baseOpts,
     ast: false,
     presets: isEsModuleFile(filename) ? esmPresets : cjsPresets
   })
 
   return {
-    code: { esm, cjs }
+    code: { esm, cjs },
+    map: { esm: esmMap, cjs: cjsMap }
   }
 }
 
