@@ -34,7 +34,9 @@ Now run `babel-dual-package src` to get an ESM and CJS build in a `dist` directo
 
 Run `babel-dual-package --help` to see a list of more [options](#options).
 
-## Example
+## Examples
+
+### TypeScript and JSX
 
 If your project is using typescript then add `@babel/preset-typescript`. If it is also using JSX, then add `@babel/preset-react`.
 
@@ -89,6 +91,41 @@ Now you can add some scripts to your package.json file to help automate the buil
   }
 ```
 
+### Flat build
+
+Given a directory structure like the following,
+
+```
+app/
+  package.json
+  src/
+    one/
+      file1.js
+    two/
+      file2.js
+    file.js
+```
+
+and by using `--out-file-extension` to make sure each build has unique filenames, you can create a flat build while still supporting conditional exports.
+
+For example, running
+
+```
+babel-dual-package --no-cjs-dir --out-file-extension esm:.esm.js,cjs:.cjs.js src/*.js src/one src/two
+```
+
+Will produce the following build output:
+
+```
+dist/
+  file.esm.js
+  file.cjs.js
+  file1.esm.js,
+  file1.cjs.js,
+  file2.esm.js,
+  file2.cjs.js
+```
+
 ## Options
 
 There are options that can be passed to provide custom output locations, file extensions, and more.
@@ -103,8 +140,16 @@ Options:
 --root-mode [mode] 		 The project-root resolution mode. One of 'root' (the default), 'upward', or 'upward-optional'.
 --cjs-dir-name [string] 	 The name of the --out-dir subdirectory to output the CJS build. [cjs]
 --extensions [extensions] 	 List of extensions to compile when a directory is part of the <files ...> input. [.js,.jsx,.mjs,.cjs]
---out-file-extension [string] 	 Use a specific extension for the output files.
+--out-file-extension [extmap] 	 Use a specific extension for esm/cjs files. [esm:.js,cjs:.cjs]
 --keep-file-extension 		 Preserve the file extensions of the input files.
 --no-cjs-dir 			 Do not create a subdirectory for the CJS build in --out-dir.
+--source-maps 			 Generate an external source map.
+--minified  			 Save as many bytes when printing (false by default).
 --help 				 Output usage information (this information).
 ```
+
+## Questions
+
+**Q** Can I use `"type": "commonjs"` in my package.json file, or just not include the field?
+
+**A** No. Converting from CJS to ESM is a codemod, not transpiling via Babel.
