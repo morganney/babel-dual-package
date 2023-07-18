@@ -1,6 +1,6 @@
 {
   "name": "babel-dual-package",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0",
   "description": "CLI for building a dual ESM and CJS package with Babel.",
   "type": "module",
   "main": "index.js",
@@ -30,7 +30,9 @@
     "@babel/cli": "^7.22.6",
     "@eslint/js": "^8.45.0",
     "eslint": "^8.45.0",
+    "eslint-plugin-jest": "^27.2.3",
     "globals": "^13.20.0",
+    "jest": "^29.6.1",
     "prettier": "^3.0.0"
   },
   "files": [
@@ -38,11 +40,12 @@
     "!*.config.js"
   ],
   "keywords": [
+    "node",
     "babel",
-    "dual-package",
+    "typescript",
+    "dual package",
     "esm",
-    "cjs",
-    ".d.ts"
+    "cjs"
   ],
   "repository": {
     "type": "git",

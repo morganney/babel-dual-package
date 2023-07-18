@@ -84,15 +84,21 @@ const init = async (onError = () => {}) => {
       }
 
       if (values['out-file-extension']) {
-        const outExt = values['out-file-extension']
-        // On the cli the argument passed is something like esm:.esm.ext,cjs:.cjs.ext
-        const matches = outExt.match(/^esm:(((\.\w+)?\.\w+)+),cjs:(((\.\w+)?\.\w+)+)$/)
+        // Allows arguments like `esm:.esm.ext,cjs:.cjs.ext`, in either order.
+        const matches = values['out-file-extension'].match(
+          /^esm:((?:\.\w+)+),cjs:((?:\.\w+)+)|cjs:((?:\.\w+)+),esm:((?:\.\w+)+)$/
+        )
 
         if (!matches) {
-          throw new Error(`Invalid argument '${outExt}' for --out-file-extension.`)
+          throw new Error(
+            `Invalid arg '${values['out-file-extension']}' for --out-file-extension.`
+          )
         }
 
-        args.values['out-file-extension'] = { esm: matches[1], cjs: matches[4] }
+        args.values['out-file-extension'] = {
+          esm: matches[1] ?? matches[4],
+          cjs: matches[2] ?? matches[3]
+        }
       }
 
       pkgJson = await readPackageUp()
