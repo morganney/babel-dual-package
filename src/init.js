@@ -1,4 +1,3 @@
-import { argv, versions } from 'node:process'
 import { parseArgs } from 'node:util'
 
 import { readPackageUp } from 'read-pkg-up'
@@ -6,19 +5,15 @@ import { loadPartialConfigAsync } from '@babel/core'
 
 import { logHelp } from './util.js'
 
-const init = async (onError = () => {}) => {
+const init = async (moduleArgs, onError = () => {}) => {
   const rootModes = ['root', 'upward', 'upward-optional']
   let pkgJson = null
   let args = null
   let babelConfig = null
 
   try {
-    if (parseFloat(versions.node) < 16.19) {
-      throw new Error('This script requires a Node version >= 16.19.0')
-    }
-
     const { values, positionals } = parseArgs({
-      argv,
+      args: moduleArgs,
       allowPositionals: true,
       options: {
         help: {
@@ -84,15 +79,21 @@ const init = async (onError = () => {}) => {
       }
 
       if (values['out-file-extension']) {
-        const outExt = values['out-file-extension']
-        // On the cli the argument passed is something like esm:.esm.ext,cjs:.cjs.ext
-        const matches = outExt.match(/^esm:(((\.\w+)?\.\w+)+),cjs:(((\.\w+)?\.\w+)+)$/)
+        // Allows arguments like `esm:.esm.ext,cjs:.cjs.ext`, in either order.
+        const matches = values['out-file-extension'].match(
+          /^esm:((?:\.\w+)+),cjs:((?:\.\w+)+)|cjs:((?:\.\w+)+),esm:((?:\.\w+)+)$/
+        )
 
         if (!matches) {
-          throw new Error(`Invalid argument '${outExt}' for --out-file-extension.`)
+          throw new Error(
+            `Invalid arg '${values['out-file-extension']}' for --out-file-extension.`
+          )
         }
 
-        args.values['out-file-extension'] = { esm: matches[1], cjs: matches[4] }
+        args.values['out-file-extension'] = {
+          esm: matches[1] ?? matches[4],
+          cjs: matches[2] ?? matches[3]
+        }
       }
 
       pkgJson = await readPackageUp()

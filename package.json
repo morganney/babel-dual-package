@@ -1,18 +1,30 @@
 {
   "name": "babel-dual-package",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0-rc.0",
   "description": "CLI for building a dual ESM and CJS package with Babel.",
   "type": "module",
-  "main": "index.js",
+  "main": "dist",
+  "bin": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "engines": {
     "node": ">=16.19.0"
   },
   "engineStrict": true,
-  "bin": "index.js",
   "scripts": {
-    "prettier": "prettier -w *.js",
-    "lint": "eslint .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "clean": "rm -rf ./dist",
+    "prettier": "prettier -w *.js src/*.js test/*.js",
+    "lint": "eslint *.js src/*.js",
+    "test": "c8 --reporter=text --reporter=lcov node test",
+    "prebuild": "npm run clean",
+    "build": "node build.js",
+    "prepack": "npm run build"
   },
   "author": "Morgan Ney <morganney@gmail.com>",
   "license": "MIT",
@@ -23,26 +35,31 @@
     "@babel/preset-react": "^7.22.5",
     "@babel/preset-typescript": "^7.22.5",
     "@babel/traverse": "^7.22.8",
+    "glob": "^10.3.3",
     "magic-string": "^0.30.1",
     "read-pkg-up": "^10.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.22.6",
     "@eslint/js": "^8.45.0",
+    "@knighted/dump": "^1.0.1",
+    "c8": "^8.0.0",
+    "codecov": "^4.0.0-0",
     "eslint": "^8.45.0",
+    "eslint-plugin-n": "^16.0.1",
     "globals": "^13.20.0",
     "prettier": "^3.0.0"
   },
   "files": [
-    "*.js",
-    "!*.config.js"
+    "dist"
   ],
   "keywords": [
+    "node",
     "babel",
-    "dual-package",
+    "typescript",
+    "dual package",
     "esm",
-    "cjs",
-    ".d.ts"
+    "cjs"
   ],
   "repository": {
     "type": "git",

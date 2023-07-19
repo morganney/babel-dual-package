@@ -1,7 +1,6 @@
-import { inspect } from 'node:util'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve } from 'node:path'
-import { readdir } from 'node:fs/promises'
+import { readdir, realpath } from 'node:fs/promises'
 
 import { createConfigItem } from '@babel/core'
 
@@ -12,10 +11,6 @@ const cyan = '\x1b[36m'
 const black = '\x1b[30m'
 const jsExtRegex = /\.(js['"`\s]*?)$/i
 const relativeSpecifierRegex = /^['"`\s]*?(?:\.|\.\.)\//i
-const dump = (obj = {}, prefix = '') => {
-  // eslint-disable-next-line no-console
-  console.log(prefix, inspect(obj, false, null, true))
-}
 const log = (color = cyan, msg = '', prefix = '') => {
   // eslint-disable-next-line no-console
   console.log(`${color}%s\x1b[0m`, `${prefix}${msg}`)
@@ -25,6 +20,12 @@ const logNotice = log.bind(null, cyan)
 const logResult = log.bind(null, black)
 const logHelp = (msg) => {
   logResult(msg, '')
+}
+const getRealPathAsFileUrl = async (path) => {
+  const realPath = await realpath(path)
+  const asFileUrl = pathToFileURL(realPath).href
+
+  return asFileUrl
 }
 const getFiles = async (dir) => {
   const dirents = await readdir(dir, { withFileTypes: true })
@@ -167,7 +168,6 @@ const getOutFileExt = (ext, outFileExtension, keepFileExtension, type = 'esm') =
 }
 
 export {
-  dump,
   log,
   logHelp,
   logError,
@@ -183,6 +183,7 @@ export {
   getPluginIdx,
   getConfigItem,
   getOutFileExt,
+  getRealPathAsFileUrl,
   getListWithItemRemoved,
   getModulePresets,
   addDefaultPresets

@@ -126,6 +126,24 @@ dist/
   file2.cjs.js
 ```
 
+### Import query parameters
+
+You can run a build by importing this package and passing an `args` [query parameter in the import specifier](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/import.meta#passing_query_parameters). Boolean [options](#options) like `--no-cjs-dir` should have an empty string as their value (`''`), and instead of positional arguments, you pass a `files` array ([globs](https://github.com/isaacs/node-glob) supported).
+
+**build.js**
+```js
+await import(
+  `./node_modules/.bin/babel-dual-package?args=${encodeURIComponent(
+    JSON.stringify({
+      '--out-dir': 'dist',
+      '--extensions': '.ts',
+      '--no-cjs-dir': '',
+      files: ['src/*.js']
+    })
+  )}`
+)
+```
+
 ## Options
 
 There are options that can be passed to provide custom output locations, file extensions, and more.
