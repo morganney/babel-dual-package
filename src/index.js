@@ -138,22 +138,16 @@ const babelDualPackage = async (moduleArgs) => {
       }
     }
 
-    if (
-      !noCjsDir &&
-      !keepFileExtension &&
-      !outFileExtension &&
-      existsSync(outDir) &&
-      existsSync(cjsOutDir)
-    ) {
+    if (outFileExtension.cjs.endsWith('.cjs') && existsSync(outDir)) {
       /**
-       * Copies any .d.ts files from --out-dir to --cjs-dir-name
-       * while updating extensions in filenames and import/exports.
+       * Updates import/export extensions and renames .d.ts ext to .d.cts
+       * while writing to the CJS output path.
        */
       const files = (await getFiles(outDir)).filter((file) => file.endsWith('.d.ts'))
 
       for (const filename of files) {
         const fileCjs = await transformDtsExtensions(filename)
-        const filenameCjs = join(cjsOutDir, basename(filename))
+        const filenameCjs = join(noCjsDir ? outDir : cjsOutDir, basename(filename))
 
         await writeFile(filenameCjs.replace(/(\.d\.ts)$/, '.d.cts'), fileCjs)
         numFilesCompiled++
