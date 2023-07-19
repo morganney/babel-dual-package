@@ -147,7 +147,7 @@ const babelDualPackage = async (moduleArgs) => {
 
       for (const filename of files) {
         const fileCjs = await transformDtsExtensions(filename)
-        const filenameCjs = join(cjsOutDir ? cjsOutDir : outDir, basename(filename))
+        const filenameCjs = join(noCjsDir ? outDir : cjsOutDir, basename(filename))
 
         await writeFile(filenameCjs.replace(/(\.d\.ts)$/, '.d.cts'), fileCjs)
         numFilesCompiled++
