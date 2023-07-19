@@ -1,4 +1,3 @@
-import { argv, versions } from 'node:process'
 import { parseArgs } from 'node:util'
 
 import { readPackageUp } from 'read-pkg-up'
@@ -6,19 +5,15 @@ import { loadPartialConfigAsync } from '@babel/core'
 
 import { logHelp } from './util.js'
 
-const init = async (onError = () => {}) => {
+const init = async (moduleArgs, onError = () => {}) => {
   const rootModes = ['root', 'upward', 'upward-optional']
   let pkgJson = null
   let args = null
   let babelConfig = null
 
   try {
-    if (parseFloat(versions.node) < 16.19) {
-      throw new Error('This script requires a Node version >= 16.19.0')
-    }
-
     const { values, positionals } = parseArgs({
-      argv,
+      args: moduleArgs,
       allowPositionals: true,
       options: {
         help: {
