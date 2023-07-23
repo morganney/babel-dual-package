@@ -15,7 +15,7 @@ CLI for building a [dual ESM and CJS package](https://nodejs.org/api/packages.ht
 
 First install `babel-dual-package`:
 
-```
+```console
 npm install babel-dual-package
 ```
 
@@ -74,7 +74,7 @@ Set the `declarationDir` for your types to the same value used for `--out-dir`, 
 
 In order to support typescript, you must pass the `--extensions` used:
 
-```
+```console
 babel-dual-package --out-dir dist --extensions .ts,.tsx src
 ```
 
@@ -111,7 +111,7 @@ and by using `--out-file-extension` to make sure each build has unique filenames
 
 For example, running
 
-```
+```console
 babel-dual-package --no-cjs-dir --out-file-extension esm:.esm.js,cjs:.cjs.js src/*.js src/one src/two
 ```
 
