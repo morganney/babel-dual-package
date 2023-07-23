@@ -143,26 +143,19 @@ const babelDualPackage = async (moduleArgs) => {
           )
           const dtsRegex = /(\.d\.ts)$/
 
-          // Leave .d.mts, and .d.cts extensions unchanged
           if (dtsRegex.test(base)) {
             const { esm, cjs } = outFileExtension
             // These are empty strings for simple extensions like .js
             const esmExt = extname(esm)
             const cjsExt = extname(cjs)
+            // If empty, revert back, otherwise use the extended extension
             const esmOut = esmExt || esm
             const cjsOut = cjsExt || cjs
             const repl = cjsOut === '.cjs' ? '.d.cts' : '$1'
 
-            //console.log('esm',esmExt, esm)
-            //console.log('cjs', cjsExt, cjs)
-
-            //console.log('outFileExtension', outFileExtension)
-
             outEsm = outEsm.replace(dtsRegex, `${esm.replace(esmOut, '')}$1`)
             outCjs = outCjs.replace(dtsRegex, `${cjs.replace(cjsOut, '')}${repl}`)
           }
-          //console.log('outEsm', outEsm)
-          //console.log('outCjs', outCjs)
 
           /**
            * TypeScript does not allow changing out file extensions,
