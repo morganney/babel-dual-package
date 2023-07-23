@@ -1,6 +1,7 @@
 # [`babel-dual-package`](https://www.npmjs.com/package/babel-dual-package)
 
 ![CI](https://github.com/morganney/babel-dual-package/actions/workflows/ci.yml/badge.svg)
+[![codecov](https://codecov.io/gh/morganney/babel-dual-package/branch/main/graph/badge.svg?token=M76U9KTGAU)](https://codecov.io/gh/morganney/babel-dual-package)
 [![NPM version](https://img.shields.io/npm/v/babel-dual-package.svg)](https://www.npmjs.com/package/babel-dual-package)
 
 CLI for building a [dual ESM and CJS package](https://nodejs.org/api/packages.html#dual-commonjses-module-packages) with Babel. Takes an ES module and produces a compiled ESM and CJS build using the configuration from your `babel.config.json` file.
@@ -150,7 +151,7 @@ There are options that can be passed to provide custom output locations, file ex
 
 You can run `babel-dual-package --help` to get more info. Below is the output of that:
 
-```
+```console
 Usage: babel-dual-package [options] <files ...>
 
 Options:

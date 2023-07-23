@@ -1,5 +1,5 @@
 import { fileURLToPath, pathToFileURL } from 'node:url'
-import { dirname, resolve } from 'node:path'
+import { dirname, resolve, extname } from 'node:path'
 import { readdir, realpath } from 'node:fs/promises'
 
 import { createConfigItem } from '@babel/core'
@@ -130,14 +130,13 @@ const getEsmPlugins = (plugins) => {
   return clones
 }
 const hasJsExt = (str) => jsExtRegex.test(str)
-const replaceJsExtWithCjs = (str) => {
+const replaceJsExtWithOutExt = (str, ext) => {
   const idx = str.lastIndexOf('.js')
-  const step = '.js'.length
 
   if (idx > -1) {
-    const newExt = '.cjs'
+    const step = '.js'.length
 
-    return `${str.substring(0, idx)}${newExt}${str.substring(idx + step, str.length)}`
+    return `${str.substring(0, idx)}${ext}${str.substring(idx + step, str.length)}`
   }
 
   return str
@@ -146,26 +145,20 @@ const isRelative = (str) => {
   // Obvious relative, or starts with a template string and has .js ext.
   return relativeSpecifierRegex.test(str) || (/^`\${/i.test(str) && hasJsExt(str))
 }
-const isEsModuleFile = (str) => /\.m[jt]s?/.test(str)
-const getOutFileExt = (ext, outFileExtension, keepFileExtension, type = 'esm') => {
+const isEsModuleFile = (filename) => /\.m[jt]s$/.test(filename)
+const isCjsFile = (filename) => /\.c[jt]s$/.test(filename)
+const getOutExt = (filename, outFileExtension, keepFileExtension, type = 'esm') => {
   if (keepFileExtension) {
-    return ext
+    return extname(filename)
   }
 
-  if (outFileExtension) {
-    return outFileExtension[type]
+  if (isEsModuleFile(filename) || isCjsFile(filename)) {
+    return extname(filename).replace(/(ts)$/, 'js')
   }
 
-  if (/\.m[jt]s/.test(ext)) {
-    return '.mjs'
-  }
-
-  if (/\.c[jt]s/.test(ext) || type === 'cjs') {
-    return '.cjs'
-  }
-
-  return '.js'
+  return outFileExtension[type]
 }
+const getDtsOutExt = () => {}
 
 export {
   log,
@@ -176,13 +169,14 @@ export {
   hasJsExt,
   isEsModuleFile,
   isRelative,
-  replaceJsExtWithCjs,
+  replaceJsExtWithOutExt,
   getFiles,
   getEsmPlugins,
   getPresetIdx,
   getPluginIdx,
   getConfigItem,
-  getOutFileExt,
+  getOutExt,
+  getDtsOutExt,
   getRealPathAsFileUrl,
   getListWithItemRemoved,
   getModulePresets,

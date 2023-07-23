@@ -5,6 +5,36 @@ import { loadPartialConfigAsync } from '@babel/core'
 
 import { logHelp } from './util.js'
 
+const parseOutFileExtension = (arg, args) => {
+  // Allows arguments like `esm:.esm.ext,cjs:.cjs.ext`, in either order.
+  const matches = arg.match(
+    /^esm:((?:\.\w+)+),cjs:((?:\.\w+)+)|cjs:((?:\.\w+)+),esm:((?:\.\w+)+)$/
+  )
+
+  if (!matches) {
+    throw new Error(`Invalid argument '${arg}' for --out-file-extension.`)
+  }
+
+  args.values['out-file-extension'] = {
+    esm: matches[1] ?? matches[4],
+    cjs: matches[2] ?? matches[3]
+  }
+}
+const parseExtensions = (exts, args) => {
+  const valid = ['.js', '.cjs', '.mjs', '.jsx', '.ts', '.mts', '.cts', '.tsx']
+  const extensions = exts
+    .split(',', valid.length)
+    .map((ext) => ext.trim())
+    .filter(Boolean)
+
+  if (extensions.some((ext) => !valid.includes(ext))) {
+    throw new Error(
+      `Invalid argument ${exts} for --extensions. Only these extensions are valid: ${valid.toString()}.`
+    )
+  }
+
+  args.values.extensions = extensions
+}
 const init = async (moduleArgs, onError = () => {}) => {
   const rootModes = ['root', 'upward', 'upward-optional']
   let pkgJson = null
@@ -34,7 +64,8 @@ const init = async (moduleArgs, onError = () => {}) => {
         },
         'out-file-extension': {
           type: 'string',
-          default: 'esm:.js,cjs:.cjs'
+          // Keep this falsy to determine if arg was passed
+          default: ''
         },
         'cjs-dir-name': {
           type: 'string',
@@ -78,24 +109,8 @@ const init = async (moduleArgs, onError = () => {}) => {
         )
       }
 
-      if (values['out-file-extension']) {
-        // Allows arguments like `esm:.esm.ext,cjs:.cjs.ext`, in either order.
-        const matches = values['out-file-extension'].match(
-          /^esm:((?:\.\w+)+),cjs:((?:\.\w+)+)|cjs:((?:\.\w+)+),esm:((?:\.\w+)+)$/
-        )
-
-        if (!matches) {
-          throw new Error(
-            `Invalid arg '${values['out-file-extension']}' for --out-file-extension.`
-          )
-        }
-
-        args.values['out-file-extension'] = {
-          esm: matches[1] ?? matches[4],
-          cjs: matches[2] ?? matches[3]
-        }
-      }
-
+      parseExtensions(values['extensions'], args)
+      parseOutFileExtension(values['out-file-extension'] || 'esm:.js,cjs:.cjs', args)
       pkgJson = await readPackageUp()
 
       if (!pkgJson) {
