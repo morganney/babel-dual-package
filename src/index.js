@@ -3,7 +3,7 @@
 import { cwd, argv, versions } from 'node:process'
 import { performance } from 'node:perf_hooks'
 import { resolve, dirname, relative, join, extname, basename } from 'node:path'
-import { lstat, writeFile, copyFile, mkdir } from 'node:fs/promises'
+import { lstat, writeFile, copyFile, mkdir, rm } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 
 import { version } from '@babel/core'
@@ -131,7 +131,6 @@ const babelDualPackage = async (moduleArgs) => {
 
       for (const filename of files) {
         const base = basename(filename)
-        let outEsm = join(outDir, base)
         let outCjs = join(noCjsDir ? outDir : cjsOutDir, base)
 
         if (keepFileExtension) {
@@ -142,28 +141,37 @@ const babelDualPackage = async (moduleArgs) => {
             outFileExtension
           )
           const dtsRegex = /(\.d\.ts)$/
+          const outEsmOrig = join(outDir, base)
+          let outEsm = outEsmOrig
 
           if (dtsRegex.test(base)) {
             const { esm, cjs } = outFileExtension
-            // These are empty strings for simple extensions like .js
+            // Reduce extended extensions to last extension
             const esmExt = extname(esm)
             const cjsExt = extname(cjs)
-            // If empty, revert back, otherwise use the extended extension
+            // Restore extension if not using extended extensions
             const esmOut = esmExt || esm
             const cjsOut = cjsExt || cjs
+            // Force .cjs files to use .d.cts declarations
             const repl = cjsOut === '.cjs' ? '.d.cts' : '$1'
 
             outEsm = outEsm.replace(dtsRegex, `${esm.replace(esmOut, '')}$1`)
             outCjs = outCjs.replace(dtsRegex, `${cjs.replace(cjsOut, '')}${repl}`)
           }
 
-          /**
-           * TypeScript does not allow changing out file extensions,
-           * so this may leave some stranded .d.ts files in --out-dir
-           * if --out-file-extension changed the input extensions.
-           */
           await writeFile(outEsm, esmTypes)
           await writeFile(outCjs, cjsTypes)
+
+          /**
+           * TypeScript does not allow changing out file extensions,
+           * so there may be some stranded .d.ts files in --out-dir
+           * if --out-file-extension changed the original extensions.
+           *
+           * @see https://github.com/microsoft/TypeScript/issues/49462
+           */
+          if (outEsmOrig !== outEsm) {
+            await rm(outEsmOrig, { force: true })
+          }
         }
 
         tsFilesUpdated++

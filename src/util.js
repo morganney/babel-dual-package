@@ -42,33 +42,6 @@ const getFiles = async (dir) => {
 const getConfigItem = (value, type = 'preset') => {
   return createConfigItem(value, { type, dirname: __dirname })
 }
-const getPresetIdx = (presets, preset) => {
-  return presets.findIndex((pre) => {
-    return new RegExp(`@babel/preset-${preset}`).test(pre.file?.resolved)
-  })
-}
-const getPluginIdx = (plugins, plugin) => {
-  return plugins.findIndex((plug) => {
-    return new RegExp(`@babel/plugin-${plugin}`).test(plug.file?.resolved)
-  })
-}
-const getListWithItemRemoved = (list, item, type) => {
-  const gettersIdx = {
-    preset: () => getPresetIdx(list, item),
-    plugin: () => getPluginIdx(list, item)
-  }
-  const idx = gettersIdx[type]()
-
-  if (idx > -1) {
-    const clone = [...list]
-
-    clone.splice(idx, 1)
-
-    return clone
-  }
-
-  return list
-}
 const addDefaultPresets = (presets, extensions) => {
   const shouldDisallow = /\.(?:mts|cts|tsx)/i.test(extensions.join(''))
   const isTsx = extensions.includes('.tsx')
@@ -138,8 +111,6 @@ const replaceJsExtWithOutExt = (str, ext) => {
 
     return `${str.substring(0, idx)}${ext}${str.substring(idx + step, str.length)}`
   }
-
-  return str
 }
 const isRelative = (str) => {
   // Obvious relative, or starts with a template string and has .js ext.
@@ -158,13 +129,10 @@ const getOutExt = (filename, outFileExtension, keepFileExtension, type = 'esm') 
 
   return outFileExtension[type]
 }
-const getDtsOutExt = () => {}
 
 export {
-  log,
   logHelp,
   logError,
-  logNotice,
   logResult,
   hasJsExt,
   isEsModuleFile,
@@ -172,13 +140,8 @@ export {
   replaceJsExtWithOutExt,
   getFiles,
   getEsmPlugins,
-  getPresetIdx,
-  getPluginIdx,
-  getConfigItem,
   getOutExt,
-  getDtsOutExt,
   getRealPathAsFileUrl,
-  getListWithItemRemoved,
   getModulePresets,
   addDefaultPresets
 }

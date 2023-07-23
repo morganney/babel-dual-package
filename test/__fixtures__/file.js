@@ -8,6 +8,8 @@ import { mjs } from './module.mjs'
 
 import { cjs } from './module.cjs'
 
+import json from './file.json'
+
 import(new String('./relative' + new String('module.js')))
 
 export const js = 'rocks'
