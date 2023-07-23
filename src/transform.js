@@ -6,76 +6,84 @@ import babelTraverse from '@babel/traverse'
 import MagicString from 'magic-string'
 
 import { isEsModuleFile } from './util.js'
-import { updateExtensionsToCjs } from './helpers.js'
+import { updateSpecifierExtensions } from './helpers.js'
 
 const traverse = babelTraverse.default
 const transform = async (filename, opts) => {
-  const source = await readFile(filename)
-  const esmSource = source.toString()
-  const cjsSource = new MagicString(esmSource)
-  const { esmPresets, esmPlugins, cjsPresets, ...rest } = opts
-  const baseOpts = {
-    ...rest,
-    babelrc: false,
-    configFile: false
-  }
+  const source = (await readFile(filename)).toString()
+  const esm = new MagicString(source)
+  const cjs = new MagicString(source)
   const {
-    ast,
-    code: esm,
-    map: esmMap
-  } = await transformAsync(esmSource, {
+    esmPresets,
+    esmPlugins,
+    cjsPresets,
+    outFileExtension,
+    keepFileExtension,
+    ...rest
+  } = opts
+  const baseOpts = { ...rest, configFile: false }
+  const specifierOpts = { esm, cjs, outFileExtension, source }
+  const ast = parse(source, {
+    sourceType: 'module',
+    allowAwaitOutsideFunction: true,
+    plugins: ['typescript', 'jsx']
+  })
+
+  if (!keepFileExtension) {
+    traverse(ast, {
+      ImportDeclaration(path) {
+        updateSpecifierExtensions({ ...specifierOpts, path })
+      },
+      CallExpression(path) {
+        if (path.get('callee').isImport()) {
+          updateSpecifierExtensions({ ...specifierOpts, path, key: 'arguments.0' })
+        }
+      },
+      'ExportNamedDeclaration|ExportAllDeclaration'(path) {
+        updateSpecifierExtensions({ ...specifierOpts, path })
+      }
+    })
+  }
+
+  const { code: esmCode, map: esmMap } = await transformAsync(esm.toString(), {
     ...baseOpts,
     plugins: esmPlugins,
     presets: esmPresets
   })
-
-  traverse(ast, {
-    ImportDeclaration(path) {
-      updateExtensionsToCjs(cjsSource, path)
-    },
-    CallExpression(path) {
-      if (path.get('callee').isImport()) {
-        updateExtensionsToCjs(cjsSource, path, 'arguments.0')
-      }
-    },
-    'ExportNamedDeclaration|ExportAllDeclaration'(path) {
-      updateExtensionsToCjs(cjsSource, path)
-    }
-  })
-
-  const { code: cjs, map: cjsMap } = await transformAsync(cjsSource.toString(), {
+  const { code: cjsCode, map: cjsMap } = await transformAsync(cjs.toString(), {
     ...baseOpts,
-    ast: false,
     presets: isEsModuleFile(filename) ? esmPresets : cjsPresets
   })
 
   return {
-    code: { esm, cjs },
+    code: { esm: esmCode, cjs: cjsCode },
     map: { esm: esmMap, cjs: cjsMap }
   }
 }
 
-const transformDtsExtensions = async (filename) => {
+const updateDtsSpecifiers = async (filename, outFileExtension) => {
   const source = (await readFile(filename)).toString()
-  const dtsCjsSrc = new MagicString(source)
+  const esm = new MagicString(source)
+  const cjs = new MagicString(source)
   const ast = parse(source, {
     sourceType: 'module',
     plugins: [['typescript', { dts: true }]]
   })
+  const opts = { esm, cjs, outFileExtension }
 
   traverse(ast, {
     TSImportType(path) {
-      updateExtensionsToCjs(dtsCjsSrc, path, 'argument')
+      updateSpecifierExtensions({ ...opts, path, key: 'argument' })
     },
     ImportDeclaration(path) {
-      updateExtensionsToCjs(dtsCjsSrc, path)
+      updateSpecifierExtensions({ ...opts, path })
     },
     'ExportNamedDeclaration|ExportAllDeclaration'(path) {
-      updateExtensionsToCjs(dtsCjsSrc, path)
+      updateSpecifierExtensions({ ...opts, path })
     }
   })
 
-  return dtsCjsSrc.toString()
+  return { esm: esm.toString(), cjs: cjs.toString() }
 }
 
-export { transform, transformDtsExtensions }
+export { transform, updateDtsSpecifiers }

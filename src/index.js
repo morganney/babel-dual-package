@@ -3,21 +3,21 @@
 import { cwd, argv, versions } from 'node:process'
 import { performance } from 'node:perf_hooks'
 import { resolve, dirname, relative, join, extname, basename } from 'node:path'
-import { lstat, writeFile, mkdir } from 'node:fs/promises'
+import { lstat, writeFile, copyFile, mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 
 import { version } from '@babel/core'
 import { glob } from 'glob'
 
 import { init } from './init.js'
-import { transform, transformDtsExtensions } from './transform.js'
+import { transform, updateDtsSpecifiers } from './transform.js'
 import {
   logError,
   logResult,
   getFiles,
+  getOutExt,
   getEsmPlugins,
   getModulePresets,
-  getOutFileExt,
   getRealPathAsFileUrl,
   addDefaultPresets
 } from './util.js'
@@ -34,17 +34,16 @@ const babelDualPackage = async (moduleArgs) => {
     const outFileExtension = args.values['out-file-extension']
     const noCjsDir = args.values['no-cjs-dir']
     const sourceMaps = args.values['source-maps']
-    const minified = args.values.minified
-    const extensions = args.values.extensions
-      .split(',', 8)
-      .map((ext) => ext.trim())
-      .filter(Boolean)
+    const { minified, extensions } = args.values
 
     if (!presets.length) {
       addDefaultPresets(presets, extensions)
     }
 
     let numFilesCompiled = 0
+    let compileTime = 0
+    let [tsFilesUpdated, tsUpdateTime, tsStartTime] = [0, 0, 0]
+    const dmctsRegex = /\.d\.[mc]?ts$/
     const esmPresets = getModulePresets(presets, 'esm')
     const cjsPresets = getModulePresets(presets, 'cjs')
     const esmPlugins = getEsmPlugins(plugins)
@@ -57,55 +56,38 @@ const babelDualPackage = async (moduleArgs) => {
         filename,
         minified,
         sourceMaps,
-        ast: true,
+        ast: false,
         sourceType: 'module',
         // Custom options
         esmPresets,
         esmPlugins,
-        cjsPresets
+        cjsPresets,
+        outFileExtension,
+        keepFileExtension
       })
 
       if (code) {
         const extRegex = /(\.\w+)$/i
-        const ext = extname(filename)
         const relativeFn = positional
           ? relative(positional, filename)
           : basename(filename)
-        const outFile = join(outDir, relativeFn)
-        const outFileCjs = join(noCjsDir ? outDir : cjsOutDir, relativeFn)
+        const esmExt = getOutExt(filename, outFileExtension, keepFileExtension)
+        const cjsExt = getOutExt(filename, outFileExtension, keepFileExtension, 'cjs')
+        let outEsm = join(outDir, relativeFn)
+        let outCjs = join(noCjsDir ? outDir : cjsOutDir, relativeFn)
 
-        await mkdir(dirname(outFile), { recursive: true })
-        await mkdir(dirname(outFileCjs), { recursive: true })
-        await writeFile(
-          outFile.replace(
-            extRegex,
-            getOutFileExt(ext, outFileExtension, keepFileExtension)
-          ),
-          code.esm
-        )
-        await writeFile(
-          outFileCjs.replace(
-            extRegex,
-            getOutFileExt(ext, outFileExtension, keepFileExtension, 'cjs')
-          ),
-          code.cjs
-        )
+        await mkdir(dirname(outEsm), { recursive: true })
+        await mkdir(dirname(outCjs), { recursive: true })
+
+        outEsm = outEsm.replace(extRegex, esmExt)
+        outCjs = outCjs.replace(extRegex, cjsExt)
+
+        await writeFile(outEsm, code.esm)
+        await writeFile(outCjs, code.cjs)
 
         if (sourceMaps && map) {
-          await writeFile(
-            outFile.replace(
-              extRegex,
-              `${getOutFileExt(ext, outFileExtension, keepFileExtension)}.map`
-            ),
-            JSON.stringify(map.esm, null, 2)
-          )
-          await writeFile(
-            outFileCjs.replace(
-              extRegex,
-              `${getOutFileExt(ext, outFileExtension, keepFileExtension, 'cjs')}.map`
-            ),
-            JSON.stringify(map.cjs, null, 2)
-          )
+          await writeFile(`${outEsm}.map`, JSON.stringify(map.esm, null, 2))
+          await writeFile(`${outCjs}.map`, JSON.stringify(map.cjs, null, 2))
         }
       }
     }
@@ -122,13 +104,15 @@ const babelDualPackage = async (moduleArgs) => {
       }
 
       if (stats.isFile()) {
-        if (extensions.includes(extname(posPath))) {
+        if (!dmctsRegex.test(posPath) && extensions.includes(extname(posPath))) {
           await build(posPath)
           numFilesCompiled++
         }
       } else {
-        const files = (await getFiles(posPath)).filter((file) =>
-          extensions.includes(extname(file))
+        const files = (await getFiles(posPath)).filter(
+          (file) =>
+            // No declaration files and only those with expected extensions
+            !dmctsRegex.test(file) && extensions.includes(extname(file))
         )
 
         for (const filename of files) {
@@ -138,29 +122,71 @@ const babelDualPackage = async (moduleArgs) => {
       }
     }
 
-    if (outFileExtension.cjs.endsWith('.cjs') && existsSync(outDir)) {
-      /**
-       * Updates import/export extensions and renames .d.ts ext to .d.cts
-       * while writing to the CJS output path.
-       */
-      const files = (await getFiles(outDir)).filter((file) => file.endsWith('.d.ts'))
+    compileTime = performance.now()
+
+    if (existsSync(outDir)) {
+      tsStartTime = performance.now()
+
+      const files = (await getFiles(outDir)).filter((file) => dmctsRegex.test(file))
 
       for (const filename of files) {
-        const fileCjs = await transformDtsExtensions(filename)
-        const filenameCjs = join(noCjsDir ? outDir : cjsOutDir, basename(filename))
+        const base = basename(filename)
+        let outEsm = join(outDir, base)
+        let outCjs = join(noCjsDir ? outDir : cjsOutDir, base)
 
-        await writeFile(filenameCjs.replace(/(\.d\.ts)$/, '.d.cts'), fileCjs)
-        numFilesCompiled++
+        if (keepFileExtension) {
+          await copyFile(filename, outCjs)
+        } else {
+          const { esm: esmTypes, cjs: cjsTypes } = await updateDtsSpecifiers(
+            filename,
+            outFileExtension
+          )
+          const dtsRegex = /(\.d\.ts)$/
+
+          if (dtsRegex.test(base)) {
+            const { esm, cjs } = outFileExtension
+            // These are empty strings for simple extensions like .js
+            const esmExt = extname(esm)
+            const cjsExt = extname(cjs)
+            // If empty, revert back, otherwise use the extended extension
+            const esmOut = esmExt || esm
+            const cjsOut = cjsExt || cjs
+            const repl = cjsOut === '.cjs' ? '.d.cts' : '$1'
+
+            outEsm = outEsm.replace(dtsRegex, `${esm.replace(esmOut, '')}$1`)
+            outCjs = outCjs.replace(dtsRegex, `${cjs.replace(cjsOut, '')}${repl}`)
+          }
+
+          /**
+           * TypeScript does not allow changing out file extensions,
+           * so this may leave some stranded .d.ts files in --out-dir
+           * if --out-file-extension changed the input extensions.
+           */
+          await writeFile(outEsm, esmTypes)
+          await writeFile(outCjs, cjsTypes)
+        }
+
+        tsFilesUpdated++
       }
+
+      tsUpdateTime = performance.now()
     }
 
     logResult(
       `Successfully compiled ${numFilesCompiled} file${
         numFilesCompiled === 1 ? '' : 's'
-      } as ESM and CJS in ${Math.round(
-        performance.now() - startTime
+      } as ESM and CJS in ${Math.abs(
+        Math.round(compileTime - startTime)
       )}ms with Babel ${version}.`
     )
+
+    if (tsFilesUpdated) {
+      logResult(
+        `Successfully copied and updated ${tsFilesUpdated} typescript declaration file${
+          tsFilesUpdated === 1 ? '' : 's'
+        } in ${Math.abs(Math.round(tsUpdateTime - tsStartTime))}ms.`
+      )
+    }
   }
 }
 const url = new URL(import.meta.url)

@@ -1,18 +1,17 @@
-import { isRelative, hasJsExt, replaceJsExtWithCjs } from './util.js'
+import { isRelative, hasJsExt, replaceJsExtWithOutExt } from './util.js'
 
 const resolveStringLiteral = (path) => {
   const { node } = path
 
   return node.extra?.raw ?? `"${node.value}"`
 }
-const resolveTemplateLiteral = (path) => {
-  const { code } = path.hub.file
+const resolveTemplateLiteral = (path, source) => {
   const { start, end } = path.node
 
-  return code.slice(start, end)
+  return source.slice(start, end)
 }
-const resolveBinaryExpression = (path) => {
-  return resolveTemplateLiteral(path)
+const resolveBinaryExpression = (path, source) => {
+  return resolveTemplateLiteral(path, source)
 }
 /**
  * Gets the 'working' value of an AST node and whether that
@@ -20,16 +19,16 @@ const resolveBinaryExpression = (path) => {
  *
  * Recursively called when the path represents an NewExpression node.
  */
-const resolve = (path) => {
+const resolve = (path, source) => {
   if (path.isBinaryExpression({ operator: '+' })) {
-    const value = resolveBinaryExpression(path)
+    const value = resolveBinaryExpression(path, source)
     const collapsed = value.replace(/['"`+)\s]|new String\(/g, '')
 
     return { value, relative: isRelative(collapsed), jsExt: hasJsExt(collapsed) }
   }
 
   if (path.isTemplateLiteral()) {
-    const value = resolveTemplateLiteral(path)
+    const value = resolveTemplateLiteral(path, source)
 
     return { value, relative: isRelative(value), jsExt: hasJsExt(value) }
   }
@@ -46,27 +45,35 @@ const resolve = (path) => {
   if (path.isNewExpression() && path.get('callee').isIdentifier({ name: 'String' })) {
     const newPath = path.get('arguments.0')
 
-    return resolve(newPath)
+    return resolve(newPath, source)
   }
 
   return { value: '', relative: false, jsExt: false }
 }
-const updateExtensionsToCjs = (src, path, key = 'source') => {
+const updateSpecifierExtensions = ({
+  esm,
+  cjs,
+  path,
+  source,
+  outFileExtension,
+  key = 'source'
+}) => {
   const property = path.get(key)
-  const { value, relative, jsExt } = resolve(property)
+  const { value, relative, jsExt } = resolve(property, source)
 
   if (relative && jsExt) {
-    /**
-     * The node ranges ([node.start, node.end]) are
-     * missing as this visitor is called during a
-     * namespace export, e.g. `export * as ns from 'mod'`.
-     *
-     * Instead use the loc property which is present.
-     */
     const { start, end } = property.node.loc
 
-    src.update(start.index, end.index, replaceJsExtWithCjs(value))
+    esm.update(
+      start.index,
+      end.index,
+      replaceJsExtWithOutExt(value, outFileExtension.esm)
+    )
+    cjs.update(
+      start.index,
+      end.index,
+      replaceJsExtWithOutExt(value, outFileExtension.cjs)
+    )
   }
 }
-
-export { updateExtensionsToCjs }
+export { updateSpecifierExtensions }

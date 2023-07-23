@@ -1,6 +1,6 @@
 {
   "name": "babel-dual-package",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.2",
   "description": "CLI for building a dual ESM and CJS package with Babel.",
   "type": "module",
   "main": "dist",
@@ -20,8 +20,8 @@
   "scripts": {
     "clean": "rm -rf ./dist",
     "prettier": "prettier -w *.js src/*.js test/*.js",
-    "lint": "eslint *.js src/*.js",
-    "test": "c8 --reporter=text --reporter=lcov node test",
+    "lint": "eslint *.js src/*.js test/*.js",
+    "test": "c8 --reporter=text --reporter=text-summary --reporter=lcov node --test test/*.js",
     "prebuild": "npm run clean",
     "build": "node build.js",
     "prepack": "npm run build"
@@ -42,13 +42,14 @@
   "devDependencies": {
     "@babel/cli": "^7.22.6",
     "@eslint/js": "^8.45.0",
-    "@knighted/dump": "^1.0.1",
+    "@knighted/dump": "^1.0.2",
     "c8": "^8.0.0",
     "codecov": "^4.0.0-0",
     "eslint": "^8.45.0",
     "eslint-plugin-n": "^16.0.1",
     "globals": "^13.20.0",
-    "prettier": "^3.0.0"
+    "prettier": "^3.0.0",
+    "typescript": "^5.1.6"
   },
   "files": [
     "dist"
