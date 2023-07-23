@@ -235,5 +235,7 @@ describe('babel-dual-package', () => {
     assert.ok(existsSync(resolve(dist, 'cjs/file.cjs.d.ts')))
     assert.ok(existsSync(resolve(dist, 'cjs/other.ext.cjs.d.ts')))
     assert.ok(existsSync(resolve(dist, 'cjs/module.es.d.mts')))
+    // Check that any unnecessary .d.ts files are removed if using extended extensions
+    assert.ok(!existsSync(resolve(dist, 'file.d.ts')))
   })
 })
