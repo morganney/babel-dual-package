@@ -173,11 +173,9 @@ const babelDualPackage = async (moduleArgs) => {
             // Restore extension if not using extended extensions
             const esmOut = esmExt || esm
             const cjsOut = cjsExt || cjs
-            // Force .cjs files to use .d.cts declarations
-            const repl = cjsOut === '.cjs' ? '.d.cts' : '$1'
 
             outEsm = outEsm.replace(dtsRegex, `${esm.replace(esmOut, '')}$1`)
-            outCjs = outCjs.replace(dtsRegex, `${cjs.replace(cjsOut, '')}${repl}`)
+            outCjs = outCjs.replace(dtsRegex, `${cjs.replace(cjsOut, '')}$1`)
           }
 
           await mkdir(dirname(outCjs), { recursive: true })

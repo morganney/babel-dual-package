@@ -208,10 +208,10 @@ describe('babel-dual-package', () => {
         'Successfully copied and updated 4 typescript declaration files'
       )
     )
-    assert.ok(existsSync(resolve(dist, 'cjs/file.d.cts')))
+    assert.ok(existsSync(resolve(dist, 'cjs/file.d.ts')))
   })
 
-  it('allows declaration files to have .d.ts extension in cjs dir', async (t) => {
+  it('removes stranded declaration files based on --out-file-extension', async (t) => {
     const { babelDualPackage } = await import('../src/index.js')
     const spy = t.mock.method(global.console, 'log')
 
