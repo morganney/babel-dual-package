@@ -152,6 +152,7 @@ There are options that can be passed to provide custom output locations, file ex
 You can run `babel-dual-package --help` to get more info. Below is the output of that:
 
 ```console
+user@comp ~ $ ./node_modules/.bin/babel-dual-package --help
 Usage: babel-dual-package [options] <files ...>
 
 Options:
@@ -164,6 +165,7 @@ Options:
 --no-cjs-dir 			 Do not create a subdirectory for the CJS build in --out-dir.
 --source-maps 			 Generate an external source map.
 --minified  			 Save as many bytes when printing (false by default).
+--copy-files 			 When compiling a directory copy over non-compilable files.
 --help 				 Output usage information (this information).
 ```
 
