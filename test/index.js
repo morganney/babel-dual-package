@@ -238,4 +238,40 @@ describe('babel-dual-package', () => {
     // Check that any unnecessary .d.ts files are removed if using extended extensions
     assert.ok(!existsSync(resolve(dist, 'file.d.ts')))
   })
+
+  it('copies declaration files as-is when using --keep-file-extension', async (t) => {
+    const { babelDualPackage } = await import('../src/index.js')
+    const spy = t.mock.method(global.console, 'log')
+
+    await mkdir(dist, { recursive: true })
+    await cp(resolve(fixtures, 'types', 'file.d.ts'), resolve(dist, 'file.d.ts'), {
+      recursive: true
+    })
+    await babelDualPackage([
+      'test/__fixtures__/ts/file.d.ts',
+      '--extensions',
+      '.ts',
+      '--keep-file-extension'
+    ])
+    await wait(150)
+
+    assert.ok(
+      spy.mock.calls[1].arguments[1].startsWith(
+        'Successfully copied and updated 1 typescript declaration file'
+      )
+    )
+    assert.ok(existsSync(resolve(dist, 'cjs/file.d.ts')))
+  })
+
+  it('can copy for non-compilable files', async (t) => {
+    const { babelDualPackage } = await import('../src/index.js')
+    const spy = t.mock.method(global.console, 'log')
+
+    await babelDualPackage(['test/__fixtures__/copy', '--copy-files'])
+    await wait(150)
+
+    assert.ok(spy.mock.calls[0].arguments[1].startsWith('Successfully compiled 1 file'))
+    assert.ok(existsSync(resolve(dist, 'file.html')))
+    assert.ok(existsSync(resolve(dist, 'dir', 'file.json')))
+  })
 })

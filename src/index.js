@@ -3,7 +3,7 @@
 import { cwd, argv, versions } from 'node:process'
 import { performance } from 'node:perf_hooks'
 import { resolve, dirname, relative, join, extname, basename } from 'node:path'
-import { lstat, writeFile, copyFile, mkdir, rm } from 'node:fs/promises'
+import { stat, writeFile, copyFile, mkdir, rm } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
 
 import { version } from '@babel/core'
@@ -34,6 +34,7 @@ const babelDualPackage = async (moduleArgs) => {
     const outFileExtension = args.values['out-file-extension']
     const noCjsDir = args.values['no-cjs-dir']
     const sourceMaps = args.values['source-maps']
+    const copyFiles = args.values['copy-files']
     const { minified, extensions } = args.values
 
     if (!presets.length) {
@@ -76,11 +77,11 @@ const babelDualPackage = async (moduleArgs) => {
         let outEsm = join(outDir, relativeFn)
         let outCjs = join(noCjsDir ? outDir : cjsOutDir, relativeFn)
 
-        await mkdir(dirname(outEsm), { recursive: true })
-        await mkdir(dirname(outCjs), { recursive: true })
-
         outEsm = outEsm.replace(extRegex, esmExt)
         outCjs = outCjs.replace(extRegex, cjsExt)
+
+        await mkdir(dirname(outEsm), { recursive: true })
+        await mkdir(dirname(outCjs), { recursive: true })
 
         await writeFile(outEsm, code.esm)
         await writeFile(outCjs, code.cjs)
@@ -97,7 +98,7 @@ const babelDualPackage = async (moduleArgs) => {
       let stats = null
 
       try {
-        stats = await lstat(posPath)
+        stats = await stat(posPath)
       } catch {
         // Move to next loop iteration if provided positional results in bogus path
         continue
@@ -109,15 +110,34 @@ const babelDualPackage = async (moduleArgs) => {
           numFilesCompiled++
         }
       } else {
-        const files = (await getFiles(posPath)).filter(
-          (file) =>
-            // No declaration files and only those with expected extensions
-            !dmctsRegex.test(file) && extensions.includes(extname(file))
+        const allFiles = await getFiles(posPath)
+        const fileHasExpectedExt = (file) => extensions.includes(extname(file))
+        const files = allFiles.filter(
+          (file) => fileHasExpectedExt(file) && !dmctsRegex.test(file)
         )
+        const nonCompilable = !copyFiles
+          ? []
+          : allFiles.filter((file) => !fileHasExpectedExt(file))
 
         for (const filename of files) {
           await build(filename, posPath)
           numFilesCompiled++
+        }
+
+        // Copy any non-compilable files
+        for (const nonComp of nonCompilable) {
+          const relativeFn = relative(posPath, nonComp)
+          const outEsm = join(outDir, relativeFn)
+
+          await mkdir(dirname(outEsm), { recursive: true })
+          await copyFile(nonComp, outEsm)
+
+          if (!noCjsDir) {
+            const outCjs = join(cjsOutDir, relativeFn)
+
+            await mkdir(dirname(outCjs), { recursive: true })
+            await copyFile(nonComp, outCjs)
+          }
         }
       }
     }
@@ -134,6 +154,7 @@ const babelDualPackage = async (moduleArgs) => {
         let outCjs = join(noCjsDir ? outDir : cjsOutDir, base)
 
         if (keepFileExtension) {
+          await mkdir(dirname(outCjs), { recursive: true })
           await copyFile(filename, outCjs)
         } else {
           const { esm: esmTypes, cjs: cjsTypes } = await updateDtsSpecifiers(
@@ -159,6 +180,7 @@ const babelDualPackage = async (moduleArgs) => {
             outCjs = outCjs.replace(dtsRegex, `${cjs.replace(cjsOut, '')}${repl}`)
           }
 
+          await mkdir(dirname(outCjs), { recursive: true })
           await writeFile(outEsm, esmTypes)
           await writeFile(outCjs, cjsTypes)
 

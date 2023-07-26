@@ -86,6 +86,10 @@ const init = async (moduleArgs, onError = () => {}) => {
         minified: {
           type: 'boolean',
           default: false
+        },
+        'copy-files': {
+          type: 'boolean',
+          default: false
         }
       }
     })
@@ -154,6 +158,9 @@ const init = async (moduleArgs, onError = () => {}) => {
     )
     logHelp('--source-maps \t\t\t Generate an external source map.')
     logHelp('--minified  \t\t\t Save as many bytes when printing (false by default).')
+    logHelp(
+      '--copy-files \t\t\t When compiling a directory copy over non-compilable files.'
+    )
     logHelp(`--help \t\t\t\t Output usage information (this information).`)
   }
 
