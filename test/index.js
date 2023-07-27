@@ -264,7 +264,7 @@ describe('babel-dual-package', () => {
     assert.ok(existsSync(resolve(dist, 'cjs/file.d.ts')))
   })
 
-  it('copies all non-compilable and non-ignored files when using --copy-files', async (t) => {
+  it('copies all non-compilable files when using --copy-files', async (t) => {
     const { babelDualPackage } = await import('../src/index.js')
     const spy = t.mock.method(global.console, 'log')
 
