@@ -205,10 +205,11 @@ describe('babel-dual-package', () => {
     assert.ok(spy.mock.calls[0].arguments[1].startsWith('Successfully compiled 4 files'))
     assert.ok(
       spy.mock.calls[1].arguments[1].startsWith(
-        'Successfully copied and updated 4 typescript declaration files'
+        'Successfully copied and updated 4 TypeScript declaration files'
       )
     )
     assert.ok(existsSync(resolve(dist, 'cjs/file.d.cts')))
+    assert.ok(!existsSync(resolve(dist, '.babelrc.json')))
   })
 
   it('allows declaration files to have .d.ts extension in cjs dir', async (t) => {
@@ -229,7 +230,7 @@ describe('babel-dual-package', () => {
     assert.ok(spy.mock.calls[0].arguments[1].startsWith('Successfully compiled 4 files'))
     assert.ok(
       spy.mock.calls[1].arguments[1].startsWith(
-        'Successfully copied and updated 4 typescript declaration files'
+        'Successfully copied and updated 4 TypeScript declaration files'
       )
     )
     assert.ok(existsSync(resolve(dist, 'cjs/file.cjs.d.ts')))
@@ -257,13 +258,13 @@ describe('babel-dual-package', () => {
 
     assert.ok(
       spy.mock.calls[1].arguments[1].startsWith(
-        'Successfully copied and updated 1 typescript declaration file'
+        'Successfully copied and updated 1 TypeScript declaration file'
       )
     )
     assert.ok(existsSync(resolve(dist, 'cjs/file.d.ts')))
   })
 
-  it('can copy for non-compilable files', async (t) => {
+  it('copies all non-compilable files when using --copy-files', async (t) => {
     const { babelDualPackage } = await import('../src/index.js')
     const spy = t.mock.method(global.console, 'log')
 
@@ -273,5 +274,9 @@ describe('babel-dual-package', () => {
     assert.ok(spy.mock.calls[0].arguments[1].startsWith('Successfully compiled 1 file'))
     assert.ok(existsSync(resolve(dist, 'file.html')))
     assert.ok(existsSync(resolve(dist, 'dir', 'file.json')))
+    assert.ok(!existsSync(resolve(dist, 'dir', 'test.js')))
+    assert.ok(!existsSync(resolve(dist, 'cjs', 'dir', 'test.js')))
+    assert.ok(!existsSync(resolve(dist, '.babelrc.json')))
+    assert.ok(!existsSync(resolve(dist, 'ignored.mjs')))
   })
 })
