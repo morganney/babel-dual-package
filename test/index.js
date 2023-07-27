@@ -208,7 +208,7 @@ describe('babel-dual-package', () => {
         'Successfully copied and updated 4 TypeScript declaration files'
       )
     )
-    assert.ok(existsSync(resolve(dist, 'cjs/file.d.cts')))
+    assert.ok(existsSync(resolve(dist, 'cjs/file.d.ts')))
     assert.ok(!existsSync(resolve(dist, '.babelrc.json')))
   })
 
