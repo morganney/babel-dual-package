@@ -2,7 +2,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url'
 import { dirname, resolve, extname } from 'node:path'
 import { readdir, realpath } from 'node:fs/promises'
 
-import { createConfigItem } from '@babel/core'
+import { createConfigItem, loadPartialConfigAsync } from '@babel/core'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -129,6 +129,11 @@ const getOutExt = (filename, outFileExtension, keepFileExtension, type = 'esm') 
 
   return outFileExtension[type]
 }
+const getBabelFileHandling = async (filename) => {
+  const conf = await loadPartialConfigAsync({ filename, showIgnoredFiles: true })
+
+  return conf.fileHandling
+}
 
 export {
   logHelp,
@@ -143,5 +148,6 @@ export {
   getOutExt,
   getRealPathAsFileUrl,
   getModulePresets,
+  getBabelFileHandling,
   addDefaultPresets
 }

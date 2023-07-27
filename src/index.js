@@ -19,6 +19,7 @@ import {
   getEsmPlugins,
   getModulePresets,
   getRealPathAsFileUrl,
+  getBabelFileHandling,
   addDefaultPresets
 } from './util.js'
 
@@ -26,8 +27,8 @@ const babelDualPackage = async (moduleArgs) => {
   const ctx = await init(moduleArgs, logError)
 
   if (ctx) {
-    const { args, babelConfig } = ctx
-    const { targets, plugins, presets } = babelConfig.options
+    const { args, babelProjectConfig } = ctx
+    const { targets, plugins, presets } = babelProjectConfig.options
     const outDir = resolve(relative(cwd(), args.values['out-dir']))
     const cjsOutDir = join(outDir, args.values['cjs-dir-name'])
     const keepFileExtension = args.values['keep-file-extension']
@@ -105,7 +106,13 @@ const babelDualPackage = async (moduleArgs) => {
       }
 
       if (stats.isFile()) {
-        if (!dmctsRegex.test(posPath) && extensions.includes(extname(posPath))) {
+        const fileHandling = await getBabelFileHandling(posPath)
+
+        if (
+          !dmctsRegex.test(posPath) &&
+          extensions.includes(extname(posPath)) &&
+          fileHandling === 'transpile'
+        ) {
           await build(posPath)
           numFilesCompiled++
         }
@@ -115,28 +122,36 @@ const babelDualPackage = async (moduleArgs) => {
         const files = allFiles.filter(
           (file) => fileHasExpectedExt(file) && !dmctsRegex.test(file)
         )
-        const nonCompilable = !copyFiles
+        const copyable = !copyFiles
           ? []
-          : allFiles.filter((file) => !fileHasExpectedExt(file))
+          : allFiles.filter(
+              (file) =>
+                !fileHasExpectedExt(file) &&
+                !/^(?:\.babelrc|babel\.config)/.test(basename(file))
+            )
 
         for (const filename of files) {
-          await build(filename, posPath)
-          numFilesCompiled++
+          const fileHandling = await getBabelFileHandling(filename)
+
+          if (fileHandling === 'transpile') {
+            await build(filename, posPath)
+            numFilesCompiled++
+          }
         }
 
         // Copy any non-compilable files
-        for (const nonComp of nonCompilable) {
-          const relativeFn = relative(posPath, nonComp)
+        for (const copy of copyable) {
+          const relativeFn = relative(posPath, copy)
           const outEsm = join(outDir, relativeFn)
 
           await mkdir(dirname(outEsm), { recursive: true })
-          await copyFile(nonComp, outEsm)
+          await copyFile(copy, outEsm)
 
           if (!noCjsDir) {
             const outCjs = join(cjsOutDir, relativeFn)
 
             await mkdir(dirname(outCjs), { recursive: true })
-            await copyFile(nonComp, outCjs)
+            await copyFile(copy, outCjs)
           }
         }
       }
@@ -210,7 +225,7 @@ const babelDualPackage = async (moduleArgs) => {
 
     if (tsFilesUpdated) {
       logResult(
-        `Successfully copied and updated ${tsFilesUpdated} typescript declaration file${
+        `Successfully copied and updated ${tsFilesUpdated} TypeScript declaration file${
           tsFilesUpdated === 1 ? '' : 's'
         } in ${Math.abs(Math.round(tsUpdateTime - tsStartTime))}ms.`
       )
