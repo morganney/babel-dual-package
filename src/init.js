@@ -39,7 +39,7 @@ const init = async (moduleArgs, onError = () => {}) => {
   const rootModes = ['root', 'upward', 'upward-optional']
   let pkgJson = null
   let args = null
-  let babelConfig = null
+  let babelProjectConfig = null
 
   try {
     const { values, positionals } = parseArgs({
@@ -128,7 +128,7 @@ const init = async (moduleArgs, onError = () => {}) => {
       }
 
       pkgJson = pkgJson.packageJson
-      babelConfig = await loadPartialConfigAsync({ rootMode: values['root-mode'] })
+      babelProjectConfig = await loadPartialConfigAsync({ rootMode: values['root-mode'] })
     }
   } catch (err) {
     onError(err.message)
@@ -164,11 +164,11 @@ const init = async (moduleArgs, onError = () => {}) => {
     logHelp(`--help \t\t\t\t Output usage information (this information).`)
   }
 
-  if (args && pkgJson && babelConfig) {
+  if (args && pkgJson && babelProjectConfig) {
     return {
       args,
       pkgJson,
-      babelConfig
+      babelProjectConfig
     }
   }
 
