@@ -78,7 +78,7 @@ In order to support typescript, you must pass the `--extensions` used:
 babel-dual-package --out-dir dist --extensions .ts,.tsx src
 ```
 
-If everything worked you should get an ESM build in `dist` and a CJS build in `dist/cjs` with all extensions in the filenames, and `import`/`export` sources updated correctly.
+If everything worked you should get an ESM build in `dist` and a CJS build in `dist/cjs` with extensions in filenames and specifiers updated correctly.
 
 Now you can add some scripts to your package.json file to help automate the build during CI/CD.
 
