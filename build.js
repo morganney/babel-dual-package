@@ -4,6 +4,7 @@ await import(
     JSON.stringify({
       '--out-dir': 'dist',
       '--no-cjs-dir': '',
+      '--no-comments': '',
       files: ['src/*.js']
     })
   )}`

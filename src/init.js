@@ -75,6 +75,10 @@ const init = async (moduleArgs, onError = () => {}) => {
           type: 'boolean',
           default: false
         },
+        'no-comments': {
+          type: 'boolean',
+          default: false
+        },
         'keep-file-extension': {
           type: 'boolean',
           default: false
@@ -156,6 +160,7 @@ const init = async (moduleArgs, onError = () => {}) => {
     logHelp(
       '--no-cjs-dir \t\t\t Do not create a subdirectory for the CJS build in --out-dir.'
     )
+    logHelp('--no-comments \t\t\t Remove comments from generated code.')
     logHelp('--source-maps \t\t\t Generate an external source map.')
     logHelp('--minified  \t\t\t Save as many bytes when printing (false by default).')
     logHelp(

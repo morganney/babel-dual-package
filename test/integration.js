@@ -5,6 +5,7 @@ import { existsSync } from 'node:fs'
 import { rm, mkdir, cp, rename } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
+import { execSync } from 'node:child_process'
 
 /* eslint-disable no-undef */
 const __filename = fileURLToPath(import.meta.url)
@@ -278,5 +279,11 @@ describe('babel-dual-package', () => {
     assert.ok(!existsSync(resolve(dist, 'cjs', 'dir', 'test.js')))
     assert.ok(!existsSync(resolve(dist, '.babelrc.json')))
     assert.ok(!existsSync(resolve(dist, 'ignored.mjs')))
+  })
+
+  it('works as a cli script', async () => {
+    const resp = execSync('./src/index.js --help', { cwd: resolve(__dirname, '..') })
+
+    assert.ok(resp.toString().indexOf('Options:') > -1)
   })
 })

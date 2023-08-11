@@ -163,6 +163,7 @@ Options:
 --out-file-extension [extmap] 	 Use a specific extension for esm/cjs files. [esm:.js,cjs:.cjs]
 --keep-file-extension 		 Preserve the file extensions of the input files.
 --no-cjs-dir 			 Do not create a subdirectory for the CJS build in --out-dir.
+--no-comments 			 Remove comments from generated code.
 --source-maps 			 Generate an external source map.
 --minified  			 Save as many bytes when printing (false by default).
 --copy-files 			 When compiling a directory copy over non-compilable files.

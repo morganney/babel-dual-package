@@ -34,6 +34,12 @@ export default [
     ignores: ['**/build.js'],
     rules: {
       'no-console': 'error',
+      'no-unused-vars': [
+        'error',
+        {
+          ignoreRestSiblings: true
+        }
+      ],
       'n/shebang': [
         'error',
         {
