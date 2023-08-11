@@ -28,15 +28,25 @@ const babelDualPackage = async (moduleArgs) => {
 
   if (ctx) {
     const { args, babelProjectConfig } = ctx
-    const { targets, plugins, presets } = babelProjectConfig.options
+    const {
+      targets,
+      plugins,
+      presets,
+      babelrc: unused,
+      ...options
+    } = babelProjectConfig.options
     const outDir = resolve(relative(cwd(), args.values['out-dir']))
     const cjsOutDir = join(outDir, args.values['cjs-dir-name'])
     const keepFileExtension = args.values['keep-file-extension']
     const outFileExtension = args.values['out-file-extension']
     const noCjsDir = args.values['no-cjs-dir']
-    const sourceMaps = args.values['source-maps']
+    const minified = args.values.minified || (options.minified ?? false)
+    const noComments =
+      args.values['no-comments'] ||
+      (Object.hasOwn(options, 'comments') ? !options.comments : false)
+    const sourceMaps = args.values['source-maps'] || (options.sourceMaps ?? false)
     const copyFiles = args.values['copy-files']
-    const { minified, extensions } = args.values
+    const { extensions } = args.values
 
     if (!presets.length) {
       addDefaultPresets(presets, extensions)
@@ -52,6 +62,7 @@ const babelDualPackage = async (moduleArgs) => {
     const startTime = performance.now()
     const build = async (filename, positional) => {
       const { code, map } = await transform(filename, {
+        ...options,
         targets,
         presets,
         plugins,
@@ -60,6 +71,7 @@ const babelDualPackage = async (moduleArgs) => {
         sourceMaps,
         ast: false,
         sourceType: 'module',
+        comments: !noComments,
         // Custom options
         esmPresets,
         esmPlugins,

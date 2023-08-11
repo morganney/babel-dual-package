@@ -1,7 +1,6 @@
 import { readFile } from 'node:fs/promises'
 
-import { parse } from '@babel/parser'
-import { transformAsync } from '@babel/core'
+import { transformAsync, parseAsync } from '@babel/core'
 import babelTraverse from '@babel/traverse'
 import MagicString from 'magic-string'
 
@@ -17,16 +16,19 @@ const transform = async (filename, opts) => {
     esmPresets,
     esmPlugins,
     cjsPresets,
+    comments,
     outFileExtension,
     keepFileExtension,
     ...rest
   } = opts
-  const baseOpts = { ...rest, configFile: false }
+  const baseOpts = { ...rest, comments, configFile: false }
   const specifierOpts = { esm, cjs, outFileExtension, source }
-  const ast = parse(source, {
-    sourceType: 'module',
-    allowAwaitOutsideFunction: true,
-    plugins: ['typescript', 'jsx']
+  const ast = await parseAsync(source, {
+    parserOpts: {
+      sourceType: 'module',
+      allowAwaitOutsideFunction: true,
+      plugins: ['typescript', 'jsx']
+    }
   })
 
   if (!keepFileExtension) {
@@ -47,11 +49,13 @@ const transform = async (filename, opts) => {
 
   const { code: esmCode, map: esmMap } = await transformAsync(esm.toString(), {
     ...baseOpts,
+    generatorOpts: { comments },
     plugins: esmPlugins,
     presets: esmPresets
   })
   const { code: cjsCode, map: cjsMap } = await transformAsync(cjs.toString(), {
     ...baseOpts,
+    generatorOpts: { comments },
     presets: isEsModuleFile(filename) ? esmPresets : cjsPresets
   })
 
@@ -65,9 +69,11 @@ const updateDtsSpecifiers = async (filename, outFileExtension) => {
   const source = (await readFile(filename)).toString()
   const esm = new MagicString(source)
   const cjs = new MagicString(source)
-  const ast = parse(source, {
-    sourceType: 'module',
-    plugins: [['typescript', { dts: true }]]
+  const ast = await parseAsync(source, {
+    parserOpts: {
+      sourceType: 'module',
+      plugins: [['typescript', { dts: true }]]
+    }
   })
   const opts = { esm, cjs, outFileExtension }
 
