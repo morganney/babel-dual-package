@@ -24,6 +24,7 @@ const transform = async (filename, opts) => {
   const baseOpts = { ...rest, comments, configFile: false }
   const specifierOpts = { esm, cjs, outFileExtension, source }
   const ast = await parseAsync(source, {
+    filename,
     parserOpts: {
       sourceType: 'module',
       allowAwaitOutsideFunction: true,
@@ -70,6 +71,7 @@ const updateDtsSpecifiers = async (filename, outFileExtension) => {
   const esm = new MagicString(source)
   const cjs = new MagicString(source)
   const ast = await parseAsync(source, {
+    filename,
     parserOpts: {
       sourceType: 'module',
       plugins: [['typescript', { dts: true }]]

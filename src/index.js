@@ -33,6 +33,7 @@ const babelDualPackage = async (moduleArgs) => {
       plugins,
       presets,
       babelrc: unused,
+      filename: overwritten,
       ...options
     } = babelProjectConfig.options
     const outDir = resolve(relative(cwd(), args.values['out-dir']))
