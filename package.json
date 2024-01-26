@@ -29,17 +29,17 @@
   "author": "Morgan Ney <morganney@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@babel/core": "^7.22.8",
-    "@babel/preset-env": "^7.22.7",
-    "@babel/preset-react": "^7.22.5",
-    "@babel/preset-typescript": "^7.22.5",
-    "@babel/traverse": "^7.22.8",
+    "@babel/core": "^7.23.9",
+    "@babel/preset-env": "^7.23.9",
+    "@babel/preset-react": "^7.23.3",
+    "@babel/preset-typescript": "^7.23.3",
+    "@babel/traverse": "^7.23.9",
     "glob": "^10.3.3",
     "magic-string": "^0.30.1",
     "read-package-up": "^11.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.22.6",
+    "@babel/cli": "^7.23.9",
     "@eslint/js": "^8.45.0",
     "@knighted/dump": "^1.0.2",
     "c8": "^8.0.0",
@@ -64,6 +64,8 @@
     "babel",
     "typescript",
     "dual package",
+    "es module",
+    "commonjs",
     "esm",
     "cjs"
   ],
