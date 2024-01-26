@@ -1,6 +1,6 @@
 import { parseArgs } from 'node:util'
 
-import { readPackageUp } from 'read-pkg-up'
+import { readPackageUp } from 'read-package-up'
 import { loadPartialConfigAsync } from '@babel/core'
 
 import { logHelp } from './util.js'
