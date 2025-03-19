@@ -10,9 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.2.2
       - name: Setup Node
-        uses: actions/setup-node@v4.0.1
+        uses: actions/setup-node@v4.3.0
         with:
           node-version: '20.11.0'
       - name: Install Dependencies
@@ -30,7 +30,7 @@ jobs:
       - name: Pack
         run: npm pack
       - name: Push to NPM registry
-        uses: JS-DevTools/npm-publish@v3.0.1
+        uses: JS-DevTools/npm-publish@v3.1.1
         with:
           token: ${{ secrets.NPM_AUTH_TOKEN }}
           tag: ${{ contains(github.ref, '-') && 'next' || 'latest' }}

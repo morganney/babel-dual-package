@@ -7,7 +7,6 @@ import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
 import { execSync } from 'node:child_process'
 
-/* eslint-disable no-undef */
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 const root = resolve(__dirname, '..')

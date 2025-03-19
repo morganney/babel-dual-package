@@ -4,15 +4,7 @@ import n from 'eslint-plugin-n'
 
 export default [
   js.configs.recommended,
-  /**
-   * Can't extend the eslint-plugin-n configuration due to the
-   * incompatibility between the classic config, and the new
-   * flat config (unless I'm doing something wrong).
-   * Changing it here, for now.
-   *
-   * @see https://github.com/eslint/eslint/issues/17355
-   */
-  { rules: n.configs['recommended-module'].rules, plugins: { n } },
+  n.configs['flat/recommended'],
   {
     languageOptions: {
       /**
@@ -30,7 +22,7 @@ export default [
         ...globals.node
       }
     },
-    files: ['*.js', 'src/*.js'],
+    files: ['*.js', 'src/*.js', 'test/*.js'],
     ignores: ['**/build.js'],
     rules: {
       'no-console': 'error',
@@ -40,12 +32,27 @@ export default [
           ignoreRestSiblings: true
         }
       ],
-      'n/shebang': [
+      'n/hashbang': [
         'error',
         {
           convertPath: {
             'src/*.js': ['^src/(.+)$', 'dist/$1']
           }
+        }
+      ],
+      'n/no-unsupported-features/node-builtins': [
+        'error',
+        {
+          // Ignoring for now in lieu of upgrading the engines field in package.json
+          ignores: [
+            'util.parseArgs',
+            'fs/promises.cp',
+            'test',
+            'test.it',
+            'test.before',
+            'test.describe',
+            'test.afterEach'
+          ]
         }
       ]
     }

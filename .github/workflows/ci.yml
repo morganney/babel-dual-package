@@ -14,9 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4.1.1
+        uses: actions/checkout@v4.2.2
       - name: Setup Node
-        uses: actions/setup-node@v4.0.1
+        uses: actions/setup-node@v4.3.0
         with:
           node-version: '20.11.0'
       - name: Install Dependencies
@@ -32,7 +32,7 @@ jobs:
       - name: Test
         run: npm test
       - name: Report Coverage
-        uses: codecov/codecov-action@v4.0.1
+        uses: codecov/codecov-action@v5.0.4
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Pack
