@@ -65,6 +65,10 @@ describe('babel-dual-package', () => {
     const from = 'babel.config.json'
     const to = 'babel.config.bak.json'
 
+    t.after(async () => {
+      await rename(resolve(root, to), resolve(root, from))
+    })
+
     await rename(resolve(root, from), resolve(root, to))
     await babelDualPackage(['test/__fixtures__/file.js'])
     await wait(150)
@@ -73,7 +77,6 @@ describe('babel-dual-package', () => {
         'Successfully compiled 1 file as ESM and CJS'
       )
     )
-    await rename(resolve(root, to), resolve(root, from))
   })
 
   it('builds files from directories', async (t) => {
