@@ -30,6 +30,7 @@
   "license": "MIT",
   "dependencies": {
     "@babel/core": "^7.28.0",
+    "@babel/preset-env": "^7.28.0",
     "@babel/preset-react": "^7.27.1",
     "@babel/preset-typescript": "^7.27.1",
     "@babel/traverse": "^7.28.0",
@@ -73,8 +74,5 @@
   },
   "bugs": {
     "url": "https://github.com/morganney/babel-dual-package/issues"
-  },
-  "peerDependencies": {
-    "@babel/preset-env": "^7.28.0"
   }
 }
