@@ -5,7 +5,8 @@ import { existsSync } from 'node:fs'
 import { rm, mkdir, cp, rename } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import { dirname, resolve } from 'node:path'
-import { execSync } from 'node:child_process'
+import { execSync, spawnSync } from 'node:child_process'
+import { platform } from 'node:process'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -13,6 +14,7 @@ const root = resolve(__dirname, '..')
 const dist = resolve(__dirname, '../dist')
 const fixtures = resolve(__dirname, '__fixtures__')
 const wait = async (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+const shell = platform === 'win32'
 
 describe('babel-dual-package', () => {
   before(async () => {
@@ -70,13 +72,25 @@ describe('babel-dual-package', () => {
     })
 
     await rename(resolve(root, from), resolve(root, to))
-    await babelDualPackage(['test/__fixtures__/file.js'])
+    await babelDualPackage(['test/__fixtures__/file.js', '--no-cjs-dir'])
     await wait(150)
     assert.ok(
       spy.mock.calls[1].arguments[1].startsWith(
         'Successfully compiled 1 file as ESM and CJS'
       )
     )
+
+    // Check for runtime errors against Node.js
+    const { status: statusEsm } = spawnSync('node', [`${root}/dist/file.js`], {
+      shell,
+      stdio: 'inherit'
+    })
+    assert.equal(statusEsm, 0)
+    const { status: statusCjs } = spawnSync('node', [`${root}/dist/file.cjs`], {
+      shell,
+      stdio: 'inherit'
+    })
+    assert.equal(statusCjs, 0)
   })
 
   it('builds files from directories', async (t) => {
@@ -283,7 +297,7 @@ describe('babel-dual-package', () => {
     assert.ok(!existsSync(resolve(dist, 'ignored.mjs')))
   })
 
-  it('works as a cli script', async () => {
+  it('works as a cli script', { skip: shell }, async () => {
     const resp = execSync('./src/index.js --help', { cwd: resolve(__dirname, '..') })
 
     assert.ok(resp.toString().indexOf('Options:') > -1)
