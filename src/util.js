@@ -50,8 +50,8 @@ const addDefaultPresets = (presets, extensions) => {
   logNotice(
     'No presets found, using default presets: ["@babel/preset-env", "@babel/preset-typescript", "@babel/preset-react"]'
   )
+  // preset-env will be added by `getModulePresets`.
   presets.push(
-    getConfigItem('@babel/preset-env'),
     getConfigItem([
       '@babel/preset-typescript',
       {

@@ -1,15 +1,14 @@
-import { mod } from 'specifier'
+import foo from '../test/__fixtures__/module.js'
 
-import foo from './bar.js'
+const dynamicMod = 'module'
+import(`../test/__fixtures__/${dynamicMod}.js`)
 
-import(`./${dynamicMod}.js`)
+import { mjs } from '../test/__fixtures__/module.mjs'
 
-import { mjs } from './module.mjs'
+import { cjs } from '../test/__fixtures__/module.cjs'
 
-import { cjs } from './module.cjs'
+import json from '../test/__fixtures__/module.json' with { type: 'json' }
 
-import json from './file.json'
-
-import(new String('./relative' + new String('module.js')))
+import(new String('../test/__fixtures__/' + new String('module.js')))
 
 export const js = 'rocks'
