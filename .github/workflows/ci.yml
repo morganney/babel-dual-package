@@ -36,7 +36,7 @@ jobs:
       - name: Test
         run: npm test
       - name: Report Coverage
-        uses: codecov/codecov-action@v5.1.1
+        uses: codecov/codecov-action@v5.4.3
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Pack
