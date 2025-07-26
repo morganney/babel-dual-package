@@ -31,6 +31,18 @@ Next write your `babel.config.json` file and include any plugins or presets your
 }
 ```
 
+> [!IMPORTANT]  
+> When including your own babel config, Windows builds require `@babel/preset-env` to have a unique name for the preset.
+> ```
+> {
+>   "presets": [
+>     ["@babel/preset-env", {
+>       "modules": false
+>     }, "some-preset-name"]
+>   ]
+> }
+
+
 Now run `babel-dual-package src` to get an ESM and CJS build in a `dist` directory that can be used as `exports` in a package.json file.
 
 Run `babel-dual-package --help` to see a list of more [options](#options).
