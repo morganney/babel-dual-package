@@ -39,21 +39,6 @@ export default [
             'src/*.js': ['^src/(.+)$', 'dist/$1']
           }
         }
-      ],
-      'n/no-unsupported-features/node-builtins': [
-        'error',
-        {
-          // Ignoring for now in lieu of upgrading the engines field in package.json
-          ignores: [
-            'util.parseArgs',
-            'fs/promises.cp',
-            'test',
-            'test.it',
-            'test.before',
-            'test.describe',
-            'test.afterEach'
-          ]
-        }
       ]
     }
   }
