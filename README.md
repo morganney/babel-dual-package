@@ -8,7 +8,7 @@ CLI for building a [dual ESM and CJS package](https://nodejs.org/api/packages.ht
 
 ## Requirements
 
-* Node >= 16.19.0.
+* Node >= 22.3.0.
 * Your package uses `"type": "module"` in package.json.
 
 ## Getting Started
@@ -32,7 +32,7 @@ Next write your `babel.config.json` file and include any plugins or presets your
 ```
 
 > [!IMPORTANT]  
-> When including your own babel config, Windows builds require `@babel/preset-env` to have a unique name for the preset.
+> When including your own Babel config, Windows builds require `@babel/preset-env` to have a unique name for the preset.
 > ```
 > {
 >   "presets": [
@@ -41,6 +41,7 @@ Next write your `babel.config.json` file and include any plugins or presets your
 >     }, "some-preset-name"]
 >   ]
 > }
+> ```
 
 
 Now run `babel-dual-package src` to get an ESM and CJS build in a `dist` directory that can be used as `exports` in a package.json file.
@@ -51,7 +52,7 @@ Run `babel-dual-package --help` to see a list of more [options](#options).
 
 ### TypeScript and JSX
 
-If your project is using typescript then add `@babel/preset-typescript`. If it is also using JSX, then add `@babel/preset-react`.
+If your project is using TypeScript then add `@babel/preset-typescript`. If it is also using JSX, then add `@babel/preset-react`.
 
 **babel.config.json**
 ```json
@@ -60,7 +61,7 @@ If your project is using typescript then add `@babel/preset-typescript`. If it i
     ["@babel/preset-env", {
       "modules": false
     }],
-    "@babel/preset-typescript"
+    "@babel/preset-typescript",
     ["@babel/preset-react", {
       "runtime": "automatic"
     }]
@@ -96,12 +97,14 @@ Now you can add some scripts to your package.json file to help automate the buil
 
 **package.json**
 ```json
+{
   "type": "module",
   "scripts": {
     "build:types": "tsc --emitDeclarationOnly",
     "build:dual": "babel-dual-package --out-dir dist --extensions .ts,.tsx src",
     "build": "npm run build:types && npm run build:dual"
   }
+}
 ```
 
 ### Flat build
@@ -133,9 +136,9 @@ Will produce the following build output:
 dist/
   file.esm.js
   file.cjs.js
-  file1.esm.js,
-  file1.cjs.js,
-  file2.esm.js,
+  file1.esm.js
+  file1.cjs.js
+  file2.esm.js
   file2.cjs.js
 ```
 
